@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>LIFT_OS - Home</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;family=Lexend:wght@600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-tint": "#adc6ff",
+                    "on-secondary-container": "#003a11",
+                    "surface": "#131313",
+                    "surface-variant": "#353534",
+                    "on-tertiary-fixed-variant": "#6a3b00",
+                    "tertiary-container": "#d47b00",
+                    "surface-container-highest": "#353534",
+                    "on-secondary-fixed-variant": "#00531c",
+                    "on-background": "#e5e2e1",
+                    "outline-variant": "#414755",
+                    "error": "#ffb4ab",
+                    "on-primary": "#002e69",
+                    "inverse-primary": "#005bc1",
+                    "secondary": "#53e16f",
+                    "on-surface": "#e5e2e1",
+                    "on-tertiary-fixed": "#2d1600",
+                    "secondary-fixed-dim": "#53e16f",
+                    "outline": "#8b90a0",
+                    "primary-fixed": "#d8e2ff",
+                    "tertiary-fixed-dim": "#ffb874",
+                    "primary": "#adc6ff",
+                    "on-tertiary-container": "#412200",
+                    "surface-container-high": "#2a2a2a",
+                    "primary-container": "#4b8eff",
+                    "surface-container-low": "#1c1b1b",
+                    "on-error-container": "#ffdad6",
+                    "background": "#131313",
+                    "on-secondary-fixed": "#002107",
+                    "inverse-surface": "#e5e2e1",
+                    "surface-dim": "#131313",
+                    "on-tertiary": "#4b2800",
+                    "on-primary-fixed-variant": "#004493",
+                    "on-secondary": "#003911",
+                    "on-surface-variant": "#c1c6d7",
+                    "surface-bright": "#393939",
+                    "tertiary": "#ffb874",
+                    "primary-fixed-dim": "#adc6ff",
+                    "secondary-container": "#05b046",
+                    "surface-container": "#201f1f",
+                    "on-primary-fixed": "#001a41",
+                    "tertiary-fixed": "#ffdcbf",
+                    "secondary-fixed": "#72fe88",
+                    "on-error": "#690005",
+                    "on-primary-container": "#00285c",
+                    "surface-container-lowest": "#0e0e0e",
+                    "inverse-on-surface": "#313030",
+                    "error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "xl": "32px",
+                    "md": "16px",
+                    "touch-target-min": "44px",
+                    "gutter": "12px",
+                    "margin-mobile": "20px",
+                    "sm": "12px",
+                    "lg": "24px",
+                    "xs": "8px",
+                    "base": "4px"
+            },
+            "fontFamily": {
+                    "label-sm": [
+                            "Inter"
+                    ],
+                    "headline-md": [
+                            "Lexend"
+                    ],
+                    "body-md": [
+                            "Inter"
+                    ],
+                    "body-lg": [
+                            "Inter"
+                    ],
+                    "label-bold": [
+                            "Inter"
+                    ],
+                    "display-metric": [
+                            "Lexend"
+                    ],
+                    "headline-lg": [
+                            "Lexend"
+                    ]
+            },
+            "fontSize": {
+                    "label-sm": [
+                            "12px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "1.3",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "1.5",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "1.5",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-bold": [
+                            "14px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "display-metric": [
+                            "48px",
+                            {
+                                    "lineHeight": "1.1",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "fontWeight": "700"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Hide scrollbar for horizontal scrolling */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-zinc-950 font-['Lexend'] font-bold tracking-tight text-zinc-100 docked full-width top-0 border-b border-zinc-800 flat no shadows flex justify-between items-center w-full px-5 py-4 z-40 sticky">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-blue-600 dark:text-blue-500 text-xl" data-icon="fitness_center">fitness_center</span>
+<span class="text-xl font-black tracking-tighter text-blue-500">LIFT_OS</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-variant overflow-hidden border border-outline-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="person">person</span>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 overflow-y-auto pb-32 px-margin-mobile pt-md flex flex-col gap-lg">
+<!-- Welcome Header -->
+<section>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Good Morning.</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Ready to crush it today?</p>
+</section>
+<!-- Today's Workout Preview Card (Bento style) -->
+<section class="bg-surface-container-low border border-surface-variant rounded-xl overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.15)] relative">
+<div class="absolute top-0 right-0 p-sm">
+<span class="bg-secondary-container text-on-secondary-container font-label-sm text-label-sm px-2 py-1 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">bolt</span> Intense
+                </span>
+</div>
+<div class="p-lg flex flex-col gap-md">
+<div>
+<h2 class="font-label-bold text-label-bold text-outline uppercase tracking-wider mb-xs">Today's Workout</h2>
+<h3 class="font-headline-md text-headline-md text-on-surface">Push Day: Hypertrophy</h3>
+</div>
+<div class="flex items-center gap-lg">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Est. Time</span>
+<span class="font-display-metric text-display-metric text-on-surface">65<span class="text-xl text-on-surface-variant ml-1">min</span></span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Exercises</span>
+<span class="font-display-metric text-display-metric text-on-surface">6</span>
+</div>
+</div>
+<div class="flex flex-wrap gap-xs mt-sm">
+<span class="px-3 py-1 bg-surface-container border border-surface-variant rounded text-on-surface-variant font-label-sm text-label-sm">Bench Press</span>
+<span class="px-3 py-1 bg-surface-container border border-surface-variant rounded text-on-surface-variant font-label-sm text-label-sm">Incline DB Press</span>
+<span class="px-3 py-1 bg-surface-container border border-surface-variant rounded text-on-surface-variant font-label-sm text-label-sm">+4 more</span>
+</div>
+</div>
+<!-- Primary Action Button attached to bottom of card -->
+<button class="w-full h-touch-target-min bg-primary-container hover:bg-primary-fixed text-on-primary-container font-label-bold text-label-bold flex items-center justify-center gap-xs transition-colors active:scale-[0.98]">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                START WORKOUT
+            </button>
+</section>
+<!-- Suggested Routines (Horizontal Scroll) -->
+<section class="flex flex-col gap-sm">
+<div class="flex justify-between items-end">
+<h2 class="font-label-bold text-label-bold text-outline uppercase tracking-wider">Suggested Routines</h2>
+<a class="font-label-sm text-label-sm text-primary flex items-center" href="#">See All <span class="material-symbols-outlined text-[16px]">chevron_right</span></a>
+</div>
+<div class="flex gap-md overflow-x-auto hide-scrollbar pb-sm -mx-margin-mobile px-margin-mobile snap-x">
+<!-- Card 1 -->
+<div class="min-w-[240px] bg-surface-container-low border border-surface-variant rounded-xl p-md flex flex-col gap-sm snap-start shrink-0 relative overflow-hidden group hover:border-outline-variant transition-colors">
+<div class="w-10 h-10 rounded bg-tertiary-container/20 flex items-center justify-center mb-xs">
+<span class="material-symbols-outlined text-tertiary">monitor_weight</span>
+</div>
+<div>
+<h3 class="font-body-md text-body-md font-semibold text-on-surface">Leg Day: Power</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Focus on squats and deadlifts.</p>
+</div>
+<div class="mt-auto pt-sm flex justify-between items-center text-on-surface-variant">
+<span class="font-label-sm text-label-sm flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">timer</span> 75 min</span>
+<span class="material-symbols-outlined text-[18px] opacity-0 group-hover:opacity-100 transition-opacity text-primary">add_circle</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="min-w-[240px] bg-surface-container-low border border-surface-variant rounded-xl p-md flex flex-col gap-sm snap-start shrink-0 relative overflow-hidden group hover:border-outline-variant transition-colors">
+<div class="w-10 h-10 rounded bg-primary-container/20 flex items-center justify-center mb-xs">
+<span class="material-symbols-outlined text-primary">directions_run</span>
+</div>
+<div>
+<h3 class="font-body-md text-body-md font-semibold text-on-surface">Active Recovery</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Light mobility and stretching.</p>
+</div>
+<div class="mt-auto pt-sm flex justify-between items-center text-on-surface-variant">
+<span class="font-label-sm text-label-sm flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">timer</span> 30 min</span>
+<span class="material-symbols-outlined text-[18px] opacity-0 group-hover:opacity-100 transition-opacity text-primary">add_circle</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="min-w-[240px] bg-surface-container-low border border-surface-variant rounded-xl p-md flex flex-col gap-sm snap-start shrink-0 relative overflow-hidden group hover:border-outline-variant transition-colors">
+<div class="w-10 h-10 rounded bg-secondary-container/20 flex items-center justify-center mb-xs">
+<span class="material-symbols-outlined text-secondary">fitness_center</span>
+</div>
+<div>
+<h3 class="font-body-md text-body-md font-semibold text-on-surface">Full Body Circuit</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">High intensity, low rest.</p>
+</div>
+<div class="mt-auto pt-sm flex justify-between items-center text-on-surface-variant">
+<span class="font-label-sm text-label-sm flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">timer</span> 45 min</span>
+<span class="material-symbols-outlined text-[18px] opacity-0 group-hover:opacity-100 transition-opacity text-primary">add_circle</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Recent Activity List -->
+<section class="flex flex-col gap-sm">
+<h2 class="font-label-bold text-label-bold text-outline uppercase tracking-wider">Recent Activity</h2>
+<div class="flex flex-col gap-xs">
+<!-- Activity Item 1 -->
+<div class="bg-surface-container border border-surface-variant rounded-lg p-sm flex items-center gap-md">
+<div class="w-12 h-12 rounded bg-surface-container-highest flex flex-col items-center justify-center border border-surface-variant">
+<span class="font-label-bold text-label-bold text-on-surface leading-none">24</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant text-[10px] uppercase">Oct</span>
+</div>
+<div class="flex-1 min-w-0">
+<h4 class="font-body-md text-body-md font-medium text-on-surface truncate">Pull Day: Back &amp; Biceps</h4>
+<div class="flex items-center gap-3 mt-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">timer</span> 55m</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">weight</span> 12,400 kg</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-surface-variant">chevron_right</span>
+</div>
+<!-- Activity Item 2 -->
+<div class="bg-surface-container border border-surface-variant rounded-lg p-sm flex items-center gap-md">
+<div class="w-12 h-12 rounded bg-surface-container-highest flex flex-col items-center justify-center border border-surface-variant">
+<span class="font-label-bold text-label-bold text-on-surface leading-none">22</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant text-[10px] uppercase">Oct</span>
+</div>
+<div class="flex-1 min-w-0">
+<h4 class="font-body-md text-body-md font-medium text-on-surface truncate">Legs: Strength Focus</h4>
+<div class="flex items-center gap-3 mt-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">timer</span> 70m</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">weight</span> 18,250 kg</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-surface-variant">chevron_right</span>
+</div>
+<!-- Activity Item 3 -->
+<div class="bg-surface-container border border-surface-variant rounded-lg p-sm flex items-center gap-md">
+<div class="w-12 h-12 rounded bg-surface-container-highest flex flex-col items-center justify-center border border-surface-variant">
+<span class="font-label-bold text-label-bold text-on-surface leading-none">20</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant text-[10px] uppercase">Oct</span>
+</div>
+<div class="flex-1 min-w-0">
+<h4 class="font-body-md text-body-md font-medium text-on-surface truncate">Push: Chest &amp; Triceps</h4>
+<div class="flex items-center gap-3 mt-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">timer</span> 60m</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">weight</span> 14,100 kg</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-surface-variant">chevron_right</span>
+</div>
+</div>
+<a class="font-label-sm text-label-sm text-on-surface-variant text-center w-full py-sm mt-xs hover:text-on-surface transition-colors" href="#">View All History</a>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="bg-zinc-900/95 backdrop-blur-md font-['Lexend'] text-[10px] font-semibold uppercase tracking-wider docked full-width bottom-0 rounded-t-lg border-t border-zinc-800 shadow-[0_-4px_12px_rgba(0,0,0,0.5)] fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 pb-safe pt-2 h-20 md:hidden">
+<a class="flex flex-col items-center justify-center text-blue-500 bg-blue-500/10 rounded-md py-1 px-3 active:scale-90 transition-all duration-200 hover:text-zinc-300" href="#">
+<span class="material-symbols-outlined mb-1 text-xl" data-icon="dashboard" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span>Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-zinc-500 active:scale-90 transition-all duration-200 hover:text-zinc-300" href="#">
+<span class="material-symbols-outlined mb-1 text-xl" data-icon="event_note">event_note</span>
+<span>Routines</span>
+</a>
+<!-- Prominent Add Workout Button -->
+<a class="flex flex-col items-center justify-center text-zinc-500 active:scale-90 transition-all duration-200 hover:text-zinc-300 -mt-6" href="#">
+<div class="bg-primary-container text-on-primary-container rounded-full w-14 h-14 flex items-center justify-center shadow-lg mb-1 border-4 border-zinc-900/95">
+<span class="material-symbols-outlined text-3xl" data-icon="add_circle">add_circle</span>
+</div>
+<span>Workout</span>
+</a>
+<a class="flex flex-col items-center justify-center text-zinc-500 active:scale-90 transition-all duration-200 hover:text-zinc-300" href="#">
+<span class="material-symbols-outlined mb-1 text-xl" data-icon="insights">insights</span>
+<span>Progress</span>
+</a>
+<a class="flex flex-col items-center justify-center text-zinc-500 active:scale-90 transition-all duration-200 hover:text-zinc-300" href="#">
+<span class="material-symbols-outlined mb-1 text-xl" data-icon="history">history</span>
+<span>History</span>
+</a>
+</nav>
+<!-- Web Navigation Cluster (Hidden on Mobile) -->
+<nav class="hidden md:flex fixed top-0 right-20 h-16 items-center gap-lg z-50 font-['Lexend'] text-[12px] font-semibold uppercase tracking-wider">
+<a class="text-blue-500 hover:text-zinc-300 transition-colors" href="#">Home</a>
+<a class="text-zinc-400 hover:text-zinc-300 transition-colors" href="#">Routines</a>
+<a class="text-zinc-400 hover:text-zinc-300 transition-colors" href="#">Progress</a>
+<a class="text-zinc-400 hover:text-zinc-300 transition-colors" href="#">History</a>
+<a class="bg-primary-container text-on-primary-container px-4 py-2 rounded-lg ml-md flex items-center gap-2 hover:bg-primary-fixed transition-colors" href="#">
+<span class="material-symbols-outlined text-sm">add_circle</span> Workout
+        </a>
+</nav>
+</body></html>

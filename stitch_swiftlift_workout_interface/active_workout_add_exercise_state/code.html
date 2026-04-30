@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Add Exercise</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;family=Lexend:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed-variant": "#6a3b00",
+                        "outline-variant": "#414755",
+                        "on-background": "#e5e2e1",
+                        "tertiary-fixed-dim": "#ffb874",
+                        "tertiary-container": "#d47b00",
+                        "surface-container-low": "#1c1b1b",
+                        "outline": "#8b90a0",
+                        "on-primary-fixed-variant": "#004493",
+                        "primary-container": "#4b8eff",
+                        "on-surface-variant": "#c1c6d7",
+                        "surface-dim": "#131313",
+                        "secondary-container": "#05b046",
+                        "on-secondary-container": "#003a11",
+                        "inverse-primary": "#005bc1",
+                        "primary": "#adc6ff",
+                        "error-container": "#93000a",
+                        "on-tertiary-fixed": "#2d1600",
+                        "secondary": "#53e16f",
+                        "primary-fixed-dim": "#adc6ff",
+                        "surface-container-highest": "#353534",
+                        "on-error": "#690005",
+                        "on-surface": "#e5e2e1",
+                        "on-primary": "#002e69",
+                        "on-primary-container": "#00285c",
+                        "surface-variant": "#353534",
+                        "surface-container-high": "#2a2a2a",
+                        "on-tertiary": "#4b2800",
+                        "on-secondary-fixed-variant": "#00531c",
+                        "on-primary-fixed": "#001a41",
+                        "secondary-fixed-dim": "#53e16f",
+                        "tertiary-fixed": "#ffdcbf",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface-container": "#201f1f",
+                        "on-secondary": "#003911",
+                        "tertiary": "#ffb874",
+                        "surface-bright": "#393939",
+                        "on-tertiary-container": "#412200",
+                        "on-error-container": "#ffdad6",
+                        "background": "#131313",
+                        "inverse-surface": "#e5e2e1",
+                        "error": "#ffb4ab",
+                        "on-secondary-fixed": "#002107",
+                        "secondary-fixed": "#72fe88",
+                        "inverse-on-surface": "#313030",
+                        "surface-tint": "#adc6ff",
+                        "surface": "#131313",
+                        "primary-fixed": "#d8e2ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "md": "16px",
+                        "xs": "8px",
+                        "base": "4px",
+                        "gutter": "12px",
+                        "sm": "12px",
+                        "touch-target-min": "44px",
+                        "margin-mobile": "20px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "label-bold": ["Inter"],
+                        "headline-md": ["Lexend"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Lexend"],
+                        "display-metric": ["Lexend"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-bold": ["14px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "1.2", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "display-metric": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "1.5", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Hide scrollbar for category chips */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background h-screen w-full flex flex-col overflow-hidden antialiased">
+<!-- Contextual Task Header -->
+<header class="flex-none px-margin-mobile py-md flex items-center justify-between border-b border-surface-container-high">
+<button class="text-primary-container font-label-bold text-label-bold flex items-center min-h-touch-target-min min-w-touch-target-min">
+<span class="material-symbols-outlined mr-xs">close</span>
+            Cancel
+        </button>
+<h1 class="font-headline-md text-headline-md text-on-background absolute left-1/2 -translate-x-1/2">Exercises</h1>
+<div class="min-w-touch-target-min"></div> <!-- Spacer for centering -->
+</header>
+<!-- Search Area -->
+<div class="flex-none px-margin-mobile pt-lg pb-md">
+<div class="relative w-full h-[48px]">
+<div class="absolute inset-y-0 left-0 pl-sm flex items-center pointer-events-none text-outline">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="w-full h-full bg-surface-container-low border border-outline-variant rounded-xl pl-10 pr-4 font-body-md text-body-md text-on-surface placeholder-on-surface-variant focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors" placeholder="Search exercises..." type="text"/>
+<button class="absolute inset-y-0 right-0 pr-sm flex items-center text-outline-variant hover:text-outline transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">mic</span>
+</button>
+</div>
+</div>
+<!-- Category Chips (Horizontal Scroll) -->
+<div class="flex-none w-full overflow-x-auto no-scrollbar px-margin-mobile pb-sm">
+<div class="flex gap-sm w-max pr-margin-mobile">
+<button class="h-[36px] px-md rounded-full bg-primary-container text-on-primary-container font-label-bold text-label-bold whitespace-nowrap shadow-sm">
+                Recent
+            </button>
+<button class="h-[36px] px-md rounded-full bg-surface-container-high text-on-surface-variant border border-outline-variant font-label-bold text-label-bold whitespace-nowrap hover:bg-surface-container-highest transition-colors">
+                Chest
+            </button>
+<button class="h-[36px] px-md rounded-full bg-surface-container-high text-on-surface-variant border border-outline-variant font-label-bold text-label-bold whitespace-nowrap hover:bg-surface-container-highest transition-colors">
+                Back
+            </button>
+<button class="h-[36px] px-md rounded-full bg-surface-container-high text-on-surface-variant border border-outline-variant font-label-bold text-label-bold whitespace-nowrap hover:bg-surface-container-highest transition-colors">
+                Legs
+            </button>
+<button class="h-[36px] px-md rounded-full bg-surface-container-high text-on-surface-variant border border-outline-variant font-label-bold text-label-bold whitespace-nowrap hover:bg-surface-container-highest transition-colors">
+                Shoulders
+            </button>
+<button class="h-[36px] px-md rounded-full bg-surface-container-high text-on-surface-variant border border-outline-variant font-label-bold text-label-bold whitespace-nowrap hover:bg-surface-container-highest transition-colors">
+                Arms
+            </button>
+</div>
+</div>
+<!-- Exercise List Canvas -->
+<main class="flex-1 overflow-y-auto px-margin-mobile pb-xl pt-sm space-y-md">
+<!-- Exercise Card 1 -->
+<div class="group flex items-center bg-surface-container-low border border-outline-variant rounded-xl p-sm hover:border-primary-container/50 transition-colors cursor-pointer">
+<div class="w-[64px] h-[64px] shrink-0 rounded-lg bg-surface-container-highest overflow-hidden relative border border-outline-variant/50">
+<img class="w-full h-full object-cover mix-blend-luminosity opacity-80 group-hover:opacity-100 transition-opacity" data-alt="A close-up, dramatic shot of a person performing a barbell bench press in a dark, high-contrast gym environment. The lighting emphasizes the knurling on the barbell and the tension in the chest muscles. The aesthetic is gritty, professional, and focuses purely on the biomechanics of the lift, using deep shadows and cool blue-tinted highlights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhdV6P87rtoJfP7asNGhzkU16CoIC8ZxnrxBajILTwLz9GlIv6DpjUnTIUkadI5PclY-G4BrNk9WmVlzey7EoRenE4h6Xb7SKe0IBIInjvk-TiN8PC94yvvpQFtavVGurFYIOxr3j7m-oDUJsWBWtWeFIrpTGfZpvgTJIr4Ig9n0k9dl3wGb7uM0001-l-LcQOHcWo7DsLqDBcMUH-TXly4dnymwWB_xtTduISRu1DP3Ok-jEw4XBDAROhGNF4I8HggxYn9zuMsfM"/>
+</div>
+<div class="flex-1 min-w-0 pl-md pr-sm">
+<h3 class="font-label-bold text-label-bold text-on-surface truncate mb-1">Barbell Bench Press</h3>
+<p class="font-label-sm text-label-sm text-outline truncate">Chest • Barbell</p>
+</div>
+<button class="shrink-0 w-touch-target-min h-touch-target-min rounded-full bg-surface-container-highest text-primary-container border border-outline-variant flex items-center justify-center hover:bg-primary-container hover:text-on-primary-container hover:border-primary-container transition-all active:scale-95">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<!-- Exercise Card 2 -->
+<div class="group flex items-center bg-surface-container-low border border-outline-variant rounded-xl p-sm hover:border-primary-container/50 transition-colors cursor-pointer">
+<div class="w-[64px] h-[64px] shrink-0 rounded-lg bg-surface-container-highest overflow-hidden relative border border-outline-variant/50">
+<img class="w-full h-full object-cover mix-blend-luminosity opacity-80 group-hover:opacity-100 transition-opacity" data-alt="A focused view of a dumbbell chest fly exercise being performed on a flat bench. The dark gym setting is illuminated by directional lighting that cuts across the subject's torso, highlighting the stretch in the pectoral muscles. The visual tone is serious and analytical, utilizing a minimalist high-contrast black and metallic palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3QgK1WRUWeI14C2IUpbfajdBrmtvmF-zx_fyLW1EDoFjswOQWeMY6coMFzTCuv7yxW2K5ancuyaAZDri3bAPLba5p0CrkQKjCtEJlj-AS4l2DGHW9jjC-_T8rr6Q-cEat9sif4020fhIm3K6obsWqsEsvlM3sXOVxNAk3EqKnTCE4aHnLDs-9yO9oo4mAh2mRDE4ixSs3HgjK0kdQwwhEZtugzWOdoCHOGIuTz9IKgPjsjVzs1_0qAYJ8vMogI5OgVlZcpEC82H4"/>
+</div>
+<div class="flex-1 min-w-0 pl-md pr-sm">
+<h3 class="font-label-bold text-label-bold text-on-surface truncate mb-1">Dumbbell Flyes</h3>
+<p class="font-label-sm text-label-sm text-outline truncate">Chest • Dumbbell</p>
+</div>
+<button class="shrink-0 w-touch-target-min h-touch-target-min rounded-full bg-surface-container-highest text-primary-container border border-outline-variant flex items-center justify-center hover:bg-primary-container hover:text-on-primary-container hover:border-primary-container transition-all active:scale-95">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<!-- Exercise Card 3 -->
+<div class="group flex items-center bg-surface-container-low border border-outline-variant rounded-xl p-sm hover:border-primary-container/50 transition-colors cursor-pointer">
+<div class="w-[64px] h-[64px] shrink-0 rounded-lg bg-surface-container-highest overflow-hidden relative border border-outline-variant/50 flex items-center justify-center">
+<!-- Fallback icon if no image -->
+<span class="material-symbols-outlined text-outline text-[32px]">fitness_center</span>
+</div>
+<div class="flex-1 min-w-0 pl-md pr-sm">
+<h3 class="font-label-bold text-label-bold text-on-surface truncate mb-1">Incline Machine Press</h3>
+<p class="font-label-sm text-label-sm text-outline truncate">Chest • Machine</p>
+</div>
+<button class="shrink-0 w-touch-target-min h-touch-target-min rounded-full bg-surface-container-highest text-primary-container border border-outline-variant flex items-center justify-center hover:bg-primary-container hover:text-on-primary-container hover:border-primary-container transition-all active:scale-95">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<!-- Exercise Card 4 -->
+<div class="group flex items-center bg-surface-container-low border border-outline-variant rounded-xl p-sm hover:border-primary-container/50 transition-colors cursor-pointer">
+<div class="w-[64px] h-[64px] shrink-0 rounded-lg bg-surface-container-highest overflow-hidden relative border border-outline-variant/50">
+<img class="w-full h-full object-cover mix-blend-luminosity opacity-80 group-hover:opacity-100 transition-opacity" data-alt="An intense, shadowy depiction of a cable crossover exercise. The frame tightly crops on the hands grasping the D-handles, pulling them together in front of the body. The background fades to absolute black, emphasizing the stark silver of the gym equipment and the deep contrast of the dark mode interface aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4HFBpjHELqnSfOAdLqEf9Nb1kdEW_BZZ37qeAqQNcp9jGFbTAbBstzNZeoK0f8dIrAJ-NlUpXuqhBUo_IdDMjAPl_xERu1RYnIXirC5dMFF8jeeQSFFPq02oHh0HPeJnyv3zvLq2s7JiphN8aR75S33w8fZUgEw8flgwi_nMnNspDWdLnzwwgkMrx9KAZTNNGsGH464LBZo2krjKlx4V0CYk2-pDBbTGbsjQBtSsUzDtqFHWz8bMjp64si_RINPiNzWxldCfpjcA"/>
+</div>
+<div class="flex-1 min-w-0 pl-md pr-sm">
+<h3 class="font-label-bold text-label-bold text-on-surface truncate mb-1">Cable Crossover</h3>
+<p class="font-label-sm text-label-sm text-outline truncate">Chest • Cable</p>
+</div>
+<button class="shrink-0 w-touch-target-min h-touch-target-min rounded-full bg-surface-container-highest text-primary-container border border-outline-variant flex items-center justify-center hover:bg-primary-container hover:text-on-primary-container hover:border-primary-container transition-all active:scale-95">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<!-- Exercise Card 5 -->
+<div class="group flex items-center bg-surface-container-low border border-outline-variant rounded-xl p-sm hover:border-primary-container/50 transition-colors cursor-pointer">
+<div class="w-[64px] h-[64px] shrink-0 rounded-lg bg-surface-container-highest overflow-hidden relative border border-outline-variant/50 flex items-center justify-center">
+<span class="material-symbols-outlined text-outline text-[32px]">accessibility_new</span>
+</div>
+<div class="flex-1 min-w-0 pl-md pr-sm">
+<h3 class="font-label-bold text-label-bold text-on-surface truncate mb-1">Push-ups</h3>
+<p class="font-label-sm text-label-sm text-outline truncate">Chest • Bodyweight</p>
+</div>
+<button class="shrink-0 w-touch-target-min h-touch-target-min rounded-full bg-surface-container-highest text-primary-container border border-outline-variant flex items-center justify-center hover:bg-primary-container hover:text-on-primary-container hover:border-primary-container transition-all active:scale-95">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</main>
+<!-- Create Custom Exercise Button (Fixed Bottom Action) -->
+<div class="flex-none p-margin-mobile bg-surface-container-low border-t border-surface-container-highest pb-[calc(20px+env(safe-area-inset-bottom))]">
+<button class="w-full min-h-touch-target-min bg-transparent border-2 border-dashed border-outline-variant rounded-xl flex items-center justify-center gap-sm text-on-surface-variant font-label-bold text-label-bold hover:bg-surface-container-highest hover:text-on-surface hover:border-outline transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined">add_circle</span>
+            Create Custom Exercise
+        </button>
+</div>
+</body></html>

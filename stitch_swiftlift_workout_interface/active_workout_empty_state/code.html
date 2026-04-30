@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Active Workout - Empty State</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;family=Lexend:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed-variant": "#6a3b00",
+                        "outline-variant": "#414755",
+                        "on-background": "#e5e2e1",
+                        "tertiary-fixed-dim": "#ffb874",
+                        "tertiary-container": "#d47b00",
+                        "surface-container-low": "#1c1b1b",
+                        "outline": "#8b90a0",
+                        "on-primary-fixed-variant": "#004493",
+                        "primary-container": "#4b8eff",
+                        "on-surface-variant": "#c1c6d7",
+                        "surface-dim": "#131313",
+                        "secondary-container": "#05b046",
+                        "on-secondary-container": "#003a11",
+                        "inverse-primary": "#005bc1",
+                        "primary": "#adc6ff",
+                        "error-container": "#93000a",
+                        "on-tertiary-fixed": "#2d1600",
+                        "secondary": "#53e16f",
+                        "primary-fixed-dim": "#adc6ff",
+                        "surface-container-highest": "#353534",
+                        "on-error": "#690005",
+                        "on-surface": "#e5e2e1",
+                        "on-primary": "#002e69",
+                        "on-primary-container": "#00285c",
+                        "surface-variant": "#353534",
+                        "surface-container-high": "#2a2a2a",
+                        "on-tertiary": "#4b2800",
+                        "on-secondary-fixed-variant": "#00531c",
+                        "on-primary-fixed": "#001a41",
+                        "secondary-fixed-dim": "#53e16f",
+                        "tertiary-fixed": "#ffdcbf",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface-container": "#201f1f",
+                        "on-secondary": "#003911",
+                        "tertiary": "#ffb874",
+                        "surface-bright": "#393939",
+                        "on-tertiary-container": "#412200",
+                        "on-error-container": "#ffdad6",
+                        "background": "#131313",
+                        "inverse-surface": "#e5e2e1",
+                        "error": "#ffb4ab",
+                        "on-secondary-fixed": "#002107",
+                        "secondary-fixed": "#72fe88",
+                        "inverse-on-surface": "#313030",
+                        "surface-tint": "#adc6ff",
+                        "surface": "#131313",
+                        "primary-fixed": "#d8e2ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "md": "16px",
+                        "xs": "8px",
+                        "base": "4px",
+                        "gutter": "12px",
+                        "sm": "12px",
+                        "touch-target-min": "44px",
+                        "margin-mobile": "20px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "label-bold": ["Inter"],
+                        "headline-md": ["Lexend"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Lexend"],
+                        "display-metric": ["Lexend"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-bold": ["14px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "1.2", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "display-metric": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "1.5", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Hide number input spinners */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md flex flex-col min-h-screen antialiased selection:bg-primary/30">
+<!-- TopAppBar -->
+<header class="bg-zinc-950 flex justify-between items-center w-full px-5 py-4 border-b border-zinc-800 docked full-width top-0 z-50">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-zinc-100 text-2xl">fitness_center</span>
+<span class="font-['Lexend'] text-xl font-black tracking-tighter text-blue-500">LIFT_OS</span>
+</div>
+<div>
+<img alt="User Avatar" class="w-8 h-8 rounded-full border border-zinc-800 object-cover" data-alt="A close-up studio portrait of a young male athlete with a focused expression, set against a dark, moody gray background. The lighting is dramatic and high-contrast, highlighting his jawline and conveying a sense of intense physical preparation. The overall aesthetic matches a premium, minimalist fitness app environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCP6EWBFS9lQxB3i_zFezJFMYbtu7GgJK4nkc0rwJAxBmT-XrN7iV_Q9W7nUoFBFZDs0K1JQ18D0aA4CH36-3qeNZxHXGT7OB8OkTvGVZnCtklldenaoN_aqXMw1yJFbUrJOlpaUpso6u8y5P6MHNhZE6JCOo8r7HLeUNa5fQn4Djnw_Mx6cApHISJ0QlCjg7BijkzbsxxmsJtXrt-hglHiiHmg_XlR9cx3SQ17LVNZifkqGb3hbAa0KxJriE1yMZAWzMfsuQAw4bg"/>
+</div>
+</header>
+<!-- Main Workout Canvas -->
+<main class="flex-1 flex flex-col p-margin-mobile gap-lg overflow-y-auto pb-32">
+<!-- Exercise Header -->
+<section class="flex flex-col gap-xs mt-4">
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Exercise 1 of 6</span>
+<button class="text-on-surface-variant hover:text-on-background transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-background">Barbell Bench Press</h1>
+<!-- Ghosted Previous Performance -->
+<div class="flex items-center gap-2 mt-1 text-on-surface-variant/70">
+<span class="material-symbols-outlined text-[16px]">history</span>
+<span class="font-label-sm text-label-sm">Last Session: 135 lbs x 8, 140 lbs x 6</span>
+</div>
+</section>
+<!-- Input Area (Empty State) -->
+<section class="bg-surface-container-low rounded-xl border border-outline-variant p-md flex flex-col gap-md shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
+<!-- Column Headers -->
+<div class="grid grid-cols-[32px_1fr_1fr_32px] gap-sm px-2 items-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant text-center">Set</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant text-center">Lbs</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant text-center">Reps</span>
+<span class="w-8"></span>
+</div>
+<!-- Set 1 Row (Active/Empty) -->
+<div class="grid grid-cols-[32px_1fr_1fr_32px] gap-sm items-center bg-surface-container p-2 rounded-lg border border-primary/30 relative overflow-hidden">
+<!-- Active Indicator Bar -->
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+<span class="font-label-bold text-label-bold text-primary w-8 text-center flex items-center justify-center">1</span>
+<!-- Weight Input -->
+<div class="relative flex items-center h-[56px] bg-surface-dim rounded-lg border border-outline-variant focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+<button class="absolute left-1 w-10 h-full flex items-center justify-center text-on-surface-variant hover:text-on-background active:scale-90 transition-transform"><span class="material-symbols-outlined text-[20px]">remove</span></button>
+<input class="w-full h-full bg-transparent text-on-background font-display-metric text-center px-12 outline-none" placeholder="--" type="number"/>
+<button class="absolute right-1 w-10 h-full flex items-center justify-center text-on-surface-variant hover:text-on-background active:scale-90 transition-transform"><span class="material-symbols-outlined text-[20px]">add</span></button>
+</div>
+<!-- Reps Input -->
+<div class="relative flex items-center h-[56px] bg-surface-dim rounded-lg border border-outline-variant focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+<button class="absolute left-1 w-10 h-full flex items-center justify-center text-on-surface-variant hover:text-on-background active:scale-90 transition-transform"><span class="material-symbols-outlined text-[20px]">remove</span></button>
+<input class="w-full h-full bg-transparent text-on-background font-display-metric text-center px-12 outline-none" placeholder="--" type="number"/>
+<button class="absolute right-1 w-10 h-full flex items-center justify-center text-on-surface-variant hover:text-on-background active:scale-90 transition-transform"><span class="material-symbols-outlined text-[20px]">add</span></button>
+</div>
+<!-- Checkbox Placeholder -->
+<button class="w-8 h-8 rounded-md flex items-center justify-center bg-surface-variant/50 text-outline-variant border border-outline-variant/50 hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[20px]">check</span>
+</button>
+</div>
+<!-- Add Set Button -->
+<button class="mt-2 flex items-center justify-center gap-2 py-2 text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm w-full">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                Add Set
+            </button>
+</section>
+<!-- Helpful Tip Banner -->
+<section class="bg-surface-container-highest/40 rounded-lg p-sm border border-outline-variant/30 flex gap-sm items-start">
+<span class="material-symbols-outlined text-tertiary mt-0.5">lightbulb</span>
+<div class="flex flex-col">
+<span class="font-label-bold text-[12px] text-tertiary uppercase tracking-wider mb-1">Form Cue</span>
+<p class="font-body-md text-[14px] text-on-surface-variant leading-relaxed">
+                    Keep your wrists stacked directly over your elbows. Drive through your feet and maintain a slight arch in your lower back for optimal power transfer.
+                </p>
+</div>
+</section>
+<!-- Bottom Fixed CTA Area -->
+<div class="fixed bottom-0 left-0 w-full p-margin-mobile bg-gradient-to-t from-background via-background to-transparent pb-safe pt-8 z-40 pointer-events-none">
+<div class="pointer-events-auto">
+<button class="w-full bg-primary-container text-[#ffffff] font-label-bold text-label-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all min-h-touch-target-min shadow-[0_4px_12px_rgba(75,142,255,0.2)]">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                    Start Set 1
+                </button>
+</div>
+</div>
+</main>
+</body></html>
