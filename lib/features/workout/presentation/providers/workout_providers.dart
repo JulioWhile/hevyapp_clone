@@ -1,6 +1,6 @@
 import 'dart:async';
 
-
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:hevy_app/core/database/app_database.dart';
@@ -80,6 +80,8 @@ class ActiveExercise {
   final int? supersetGroupId;
   final List<ActiveSet> sets;
   final String? notes;
+  final int? restTimerSeconds; // null = OFF, no auto-start on set completion
+  final String? gifUrl;
 
   const ActiveExercise({
     this.workoutExerciseId,
@@ -91,6 +93,8 @@ class ActiveExercise {
     this.supersetGroupId,
     this.sets = const [],
     this.notes,
+    this.restTimerSeconds,
+    this.gifUrl,
   });
 
   ActiveExercise copyWith({
@@ -99,6 +103,8 @@ class ActiveExercise {
     int? Function()? supersetGroupId,
     List<ActiveSet>? sets,
     String? Function()? notes,
+    int? Function()? restTimerSeconds,
+    String? Function()? gifUrl,
   }) {
     return ActiveExercise(
       workoutExerciseId: workoutExerciseId ?? this.workoutExerciseId,
@@ -110,6 +116,8 @@ class ActiveExercise {
       supersetGroupId: supersetGroupId != null ? supersetGroupId() : this.supersetGroupId,
       sets: sets ?? this.sets,
       notes: notes != null ? notes() : this.notes,
+      restTimerSeconds: restTimerSeconds != null ? restTimerSeconds() : this.restTimerSeconds,
+      gifUrl: gifUrl != null ? gifUrl() : this.gifUrl,
     );
   }
 }
@@ -207,7 +215,7 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState?> {
   }
 
   /// Add an exercise to the active workout.
-  Future<void> addExercise(Exercise exercise) async {
+  Future<void> addExercise(Exercise exercise, {int? supersetGroupId}) async {
     if (state == null) return;
 
     final orderIndex = state!.exercises.length;
@@ -215,6 +223,7 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState?> {
       workoutId: state!.workoutId!,
       exerciseId: exercise.id,
       orderIndex: orderIndex,
+      supersetGroupId: supersetGroupId,
     );
 
     // Fetch previous performance for ghost text.
@@ -233,6 +242,8 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState?> {
       muscleGroup: exercise.primaryMuscleGroup,
       equipment: exercise.equipment,
       orderIndex: orderIndex,
+      supersetGroupId: supersetGroupId,
+      gifUrl: exercise.gifUrl,
       sets: [
         ActiveSet(
           dbId: setId,
@@ -294,8 +305,19 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState?> {
     final exercise = state!.exercises[exerciseIndex];
     final set = exercise.sets[setIndex];
 
+    // Auto-calculate warmup weight from normal sets when switching to warmup.
+    double? resolvedWeight = weight;
+    if (setType == 'warmup' && set.setType != 'warmup' && set.weight == 0.0) {
+      final maxNormal = exercise.sets
+          .where((s) => s.setType == 'normal' && s.weight > 0)
+          .fold<double>(0, (max, s) => s.weight > max ? s.weight : max);
+      if (maxNormal > 0) {
+        resolvedWeight = double.parse((maxNormal * 0.5).toStringAsFixed(1));
+      }
+    }
+
     final updatedSet = set.copyWith(
-      weight: weight ?? set.weight,
+      weight: resolvedWeight ?? set.weight,
       reps: reps ?? set.reps,
       setType: setType ?? set.setType,
       isCompleted: isCompleted ?? set.isCompleted,
@@ -307,7 +329,7 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState?> {
     if (set.dbId != null) {
       await _workoutDao.updateSet(
         setId: set.dbId!,
-        weight: weight,
+        weight: resolvedWeight ?? weight,
         reps: reps,
         setType: setType,
         isCompleted: isCompleted,
@@ -346,6 +368,13 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState?> {
     }
 
     _updateExercise(exerciseIndex, exercise.copyWith(notes: () => updatedNotes));
+  }
+
+  /// Set the rest timer duration for an exercise (null = OFF).
+  void updateExerciseRestTimer(int exerciseIndex, int? seconds) {
+    if (state == null) return;
+    final exercise = state!.exercises[exerciseIndex];
+    _updateExercise(exerciseIndex, exercise.copyWith(restTimerSeconds: () => seconds));
   }
 
   /// Delete a set.
@@ -453,6 +482,7 @@ class RestTimerState {
 
 class RestTimerNotifier extends StateNotifier<RestTimerState> {
   Timer? _timer;
+  final _audioPlayer = AudioPlayer();
 
   RestTimerNotifier() : super(const RestTimerState());
 
@@ -468,10 +498,15 @@ class RestTimerNotifier extends StateNotifier<RestTimerState> {
       if (state.remainingSeconds <= 1) {
         _timer?.cancel();
         state = state.copyWith(remainingSeconds: 0, isRunning: false);
+        _playBeep();
       } else {
         state = state.copyWith(remainingSeconds: state.remainingSeconds - 1);
       }
     });
+  }
+
+  void _playBeep() {
+    _audioPlayer.play(AssetSource('sounds/timer_beep.wav'));
   }
 
   void stop() {

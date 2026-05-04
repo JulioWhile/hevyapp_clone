@@ -183,7 +183,7 @@ class _ExerciseTile extends StatelessWidget {
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        leading: _MuscleGroupIcon(muscleGroup: exercise.primaryMuscleGroup),
+        leading: _ExerciseThumb(exercise: exercise),
         title: Text(
           exercise.name,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -216,13 +216,13 @@ class _ExerciseTile extends StatelessWidget {
   }
 }
 
-/// Colored circle icon representing a muscle group.
-class _MuscleGroupIcon extends StatelessWidget {
-  const _MuscleGroupIcon({required this.muscleGroup});
+/// Exercise thumbnail — shows GIF if available, otherwise a colored muscle group icon.
+class _ExerciseThumb extends StatelessWidget {
+  const _ExerciseThumb({required this.exercise});
 
-  final String muscleGroup;
+  final Exercise exercise;
 
-  Color get _color => switch (muscleGroup) {
+  Color get _color => switch (exercise.primaryMuscleGroup) {
         'chest' => const Color(0xFFEF4444),
         'back' => const Color(0xFF3B82F6),
         'shoulders' => const Color(0xFFF97316),
@@ -238,24 +238,24 @@ class _MuscleGroupIcon extends StatelessWidget {
         _ => AppColors.textTertiary,
       };
 
-  IconData get _icon => switch (muscleGroup) {
-        'chest' => Icons.fitness_center_rounded,
-        'back' => Icons.fitness_center_rounded,
-        'shoulders' => Icons.fitness_center_rounded,
-        'biceps' => Icons.fitness_center_rounded,
-        'triceps' => Icons.fitness_center_rounded,
-        'forearms' => Icons.fitness_center_rounded,
-        'quads' => Icons.directions_run_rounded,
-        'hamstrings' => Icons.directions_run_rounded,
-        'glutes' => Icons.directions_run_rounded,
-        'calves' => Icons.directions_run_rounded,
-        'core' => Icons.self_improvement_rounded,
-        'cardio' => Icons.favorite_rounded,
-        _ => Icons.fitness_center_rounded,
-      };
-
   @override
   Widget build(BuildContext context) {
+    if (exercise.gifUrl != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.asset(
+          'assets/gifs/${exercise.gifUrl}',
+          width: 48,
+          height: 48,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _fallbackIcon(),
+        ),
+      );
+    }
+    return _fallbackIcon();
+  }
+
+  Widget _fallbackIcon() {
     return Container(
       width: 40,
       height: 40,
@@ -263,7 +263,7 @@ class _MuscleGroupIcon extends StatelessWidget {
         color: _color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Icon(_icon, color: _color, size: 20),
+      child: Icon(Icons.fitness_center_rounded, color: _color, size: 20),
     );
   }
 }

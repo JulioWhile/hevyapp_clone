@@ -65,7 +65,14 @@ class WorkoutDao extends DatabaseAccessor<AppDatabase> with _$WorkoutDaoMixin {
     );
   }
 
-  /// Get all completed workouts, newest first.
+  /// Rename a workout.
+  Future<void> updateWorkoutName(int workoutId, String name) {
+    return (update(workouts)..where((t) => t.id.equals(workoutId))).write(
+      WorkoutsCompanion(name: Value(name)),
+    );
+  }
+
+  /// Export a workout as a map for JSON serialization.
   Future<List<Workout>> getCompletedWorkouts() {
     return (select(workouts)
           ..where((t) => t.finishedAt.isNotNull())
@@ -281,6 +288,39 @@ class WorkoutDao extends DatabaseAccessor<AppDatabase> with _$WorkoutDaoMixin {
       date: DateTime.parse(r.read<String>('date')),
       value: r.read<double>('value'),
     )).toList();
+  }
+
+  /// Compile a workout into a map for JSON/CSV export.
+  Future<Map<String, dynamic>> exportWorkout(int workoutId) async {
+    final workout = await getWorkoutById(workoutId);
+    final exercises = await getWorkoutExercises(workoutId);
+    final exData = <Map<String, dynamic>>[];
+
+    for (final we in exercises) {
+      final sets = await getSetsForExercise(we.workoutExercise.id);
+      exData.add({
+        'exercise': we.exercise.name,
+        'muscleGroup': we.exercise.primaryMuscleGroup,
+        'equipment': we.exercise.equipment,
+        'sets': sets.where((s) => s.isCompleted).map((s) => {
+          'set': s.setNumber,
+          'type': s.setType,
+          'weight': s.weight,
+          'reps': s.reps,
+          if (s.rpe != null) 'rpe': s.rpe,
+          if (s.rir != null) 'rir': s.rir,
+        }).toList(),
+      });
+    }
+
+    return {
+      'name': workout.name,
+      'startedAt': workout.startedAt.toIso8601String(),
+      'finishedAt': workout.finishedAt?.toIso8601String(),
+      'durationSeconds': workout.durationSeconds,
+      'notes': workout.notes,
+      'exercises': exData,
+    };
   }
 }
 

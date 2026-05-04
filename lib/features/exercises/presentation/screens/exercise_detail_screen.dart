@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -42,7 +44,92 @@ class ExerciseDetailScreen extends ConsumerWidget {
               _buildInfoChip(Icons.build_circle_outlined, _capitalize(exercise.equipment)),
             ],
           ),
-          const SizedBox(height: 32),
+          if (exercise.secondaryMuscleGroups != null) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: (() {
+                try {
+                  final list = json.decode(exercise.secondaryMuscleGroups!) as List<dynamic>;
+                  return list.map((g) => _buildInfoChip(
+                    Icons.fitness_center_outlined,
+                    _capitalize(g.toString()),
+                  )).toList();
+                } catch (_) {
+                  return <Widget>[];
+                }
+              })(),
+            ),
+          ],
+          const SizedBox(height: 24),
+
+          // ─── Exercise GIF ─────────────────────────
+          if (exercise.gifUrl != null) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.asset(
+                'assets/gifs/${exercise.gifUrl}',
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
+            ),
+            const SizedBox(height: 32),
+          ],
+
+          // ─── Instructions ─────────────────────────
+          if (exercise.instructions != null) ...[
+            Text(
+              'Instructions',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            ...(() sync* {
+              try {
+                final steps = json.decode(exercise.instructions!) as List<dynamic>;
+                for (int i = 0; i < steps.length; i++) {
+                  yield Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 24,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '${i + 1}',
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            (steps[i] as String).replaceFirst(RegExp(r'^Step:\d+\s*'), ''),
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 14,
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+              } catch (_) {}
+            })(),
+            const SizedBox(height: 32),
+          ],
 
           // ─── Max Weight Chart ─────────────────────
           Text(

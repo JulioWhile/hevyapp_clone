@@ -8,116 +8,303 @@ import 'package:hevy_app/core/providers/unit_providers.dart';
 import 'package:hevy_app/features/history/presentation/providers/history_providers.dart';
 
 
-class WorkoutSummaryScreen extends ConsumerWidget {
+class WorkoutSummaryScreen extends ConsumerStatefulWidget {
   const WorkoutSummaryScreen({super.key, required this.workoutId, required this.newPRs});
 
   final int workoutId;
   final List<NewPR> newPRs;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final detailAsync = ref.watch(workoutDetailProvider(workoutId));
+  ConsumerState<WorkoutSummaryScreen> createState() => _WorkoutSummaryScreenState();
+}
+
+class _WorkoutSummaryScreenState extends ConsumerState<WorkoutSummaryScreen> with TickerProviderStateMixin {
+  late AnimationController _checkController;
+  late AnimationController _metricsController;
+  late Animation<double> _checkScale;
+  late Animation<double> _metricsSlide;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _metricsController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    _checkScale = CurvedAnimation(
+      parent: _checkController,
+      curve: Curves.elasticOut,
+    );
+    _metricsSlide = CurvedAnimation(
+      parent: _metricsController,
+      curve: Curves.easeOutCubic,
+    );
+
+    // Stagger the animations
+    _checkController.forward();
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (mounted) _metricsController.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _checkController.dispose();
+    _metricsController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final detailAsync = ref.watch(workoutDetailProvider(widget.workoutId));
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Workout Complete'),
-        automaticallyImplyLeading: false,
-      ),
       body: detailAsync.when(
         data: (data) {
           final w = data.workout;
-          return ListView(
-            padding: const EdgeInsets.all(16),
+          final unitLabel = ref.watch(unitLabelProvider);
+          final vol = data.totalVolume;
+          final volumeFormatted = vol >= 1000
+              ? '${(vol / 1000).toStringAsFixed(1)}k'
+              : vol.toStringAsFixed(0);
+          final durationMin = w.durationSeconds ~/ 60;
+
+          return Stack(
             children: [
-              // ─── Celebration header ──────────────────
-              Center(
-                child: Column(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: AppColors.accent.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.check_rounded, color: AppColors.accent, size: 48),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      w.name,
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      DateFormat('EEEE, MMM d · h:mm a').format(w.startedAt),
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // ─── Stats cards ─────────────────────────
-              Row(
+              ListView(
+                padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 20, 20, 160),
                 children: [
-                  Expanded(child: _StatCard(icon: Icons.timer_outlined, label: 'Duration', value: _formatDuration(w.durationSeconds))),
-                  const SizedBox(width: 12),
-                  Expanded(child: _StatCard(icon: Icons.fitness_center_rounded, label: 'Volume', value: '${data.totalVolume.toStringAsFixed(0)} ${ref.watch(unitLabelProvider)}')),
-                  const SizedBox(width: 12),
-                  Expanded(child: _StatCard(icon: Icons.format_list_numbered_rounded, label: 'Sets', value: '${data.totalSets}')),
-                ],
-              ),
+                  // ─── Celebration Header ──────────────
+                  Center(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 40),
+                        ScaleTransition(
+                          scale: _checkScale,
+                          child: Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: AppColors.accent,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.accent.withValues(alpha: 0.4),
+                                  blurRadius: 24,
+                                  spreadRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(Icons.check_rounded, color: Colors.white, size: 48),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          'Workout Complete',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.accent,
+                            letterSpacing: -1,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          w.name,
+                          style: const TextStyle(fontSize: 18, color: AppColors.textSecondary),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          DateFormat('EEEE, MMM d · h:mm a').format(w.startedAt),
+                          style: const TextStyle(fontSize: 14, color: AppColors.textTertiary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
 
-              // ─── New PRs ─────────────────────────────
-              if (newPRs.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                const Text(
-                  '🏆 New Personal Records!',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.accent),
-                ),
-                const SizedBox(height: 12),
-                ...newPRs.map((pr) => Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: AppColors.accent.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
-                      ),
-                      child: Row(
+                  // ─── Metrics Bento Grid ──────────────
+                  SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.3),
+                      end: Offset.zero,
+                    ).animate(_metricsSlide),
+                    child: FadeTransition(
+                      opacity: _metricsSlide,
+                      child: Column(
                         children: [
-                          const Icon(Icons.emoji_events_rounded, color: AppColors.accent, size: 24),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                          Row(
+                            children: [
+                              // Duration
+                              Expanded(
+                                child: _MetricCard(
+                                  icon: Icons.timer_outlined,
+                                  value: '$durationMin',
+                                  unit: 'm',
+                                  label: 'Duration',
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              // Volume
+                              Expanded(
+                                child: _MetricCard(
+                                  icon: Icons.fitness_center_rounded,
+                                  value: volumeFormatted,
+                                  unit: '',
+                                  label: 'Volume ($unitLabel)',
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          // Total Sets — full width
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppColors.border),
+                              gradient: LinearGradient(
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                colors: [AppColors.surface, AppColors.surfaceElevated],
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(pr.exerciseName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surfaceHighlight,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.repeat_rounded, color: AppColors.textTertiary, size: 20),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text('Total Sets', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                                  ],
+                                ),
                                 Text(
-                                  '${pr.displayType}: ${pr.value.toStringAsFixed(1)}${pr.previousValue != null ? ' (was ${pr.previousValue!.toStringAsFixed(1)})' : ''}',
-                                  style: const TextStyle(color: AppColors.accent, fontSize: 13),
+                                  '${data.totalSets}',
+                                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
                                 ),
                               ],
                             ),
                           ),
                         ],
                       ),
+                    ),
+                  ),
+
+                  // ─── New PRs ──────────────────────────
+                  if (widget.newPRs.isNotEmpty) ...[
+                    const SizedBox(height: 28),
+                    Text(
+                      'ACHIEVEMENTS',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textTertiary,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ...widget.newPRs.map((pr) => Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceElevated,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.warning.withValues(alpha: 0.15),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          // Gold left accent
+                          Container(
+                            width: 4,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: AppColors.warning,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: AppColors.warning.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.emoji_events_rounded, color: AppColors.warning, size: 24),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'New Personal Record',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13,
+                                    color: AppColors.warning,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${pr.exerciseName} • ${pr.value.toStringAsFixed(1)} $unitLabel',
+                                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                                ),
+                                if (pr.previousValue != null)
+                                  Text(
+                                    'Previous: ${pr.previousValue!.toStringAsFixed(1)} $unitLabel',
+                                    style: const TextStyle(fontSize: 12, color: AppColors.textTertiary),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     )),
-              ],
+                  ],
 
-              const SizedBox(height: 24),
-
-              // ─── Exercises breakdown ─────────────────
-              Text('Exercises', style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 12),
-              ...data.exercises.map((e) => Container(
+                  // ─── Exercise Breakdown ───────────────
+                  const SizedBox(height: 28),
+                  Text(
+                    'EXERCISES',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textTertiary,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ...data.exercises.map((e) => Container(
                     margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: AppColors.border, width: 0.5),
                     ),
                     child: Column(
@@ -126,25 +313,52 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                         Text(e.exercise.name, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 15)),
                         const SizedBox(height: 6),
                         Text(
-                          e.sets.where((s) => s.isCompleted).map((s) => '${s.weight}${ref.watch(unitLabelProvider)} × ${s.reps}').join(' · '),
+                          e.sets.where((s) => s.isCompleted).map((s) => '${s.weight.toStringAsFixed(1)}$unitLabel × ${s.reps}').join(' · '),
                           style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                         ),
                       ],
                     ),
                   )),
+                ],
+              ),
 
-              const SizedBox(height: 24),
-
-              // ─── Done button ─────────────────────────
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-                  child: const Text('Done', style: TextStyle(fontSize: 16)),
+              // ─── Sticky Bottom Actions ──────────────
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        AppColors.background.withValues(alpha: 0.0),
+                        AppColors.background,
+                        AppColors.background,
+                      ],
+                    ),
+                  ),
+                  padding: EdgeInsets.fromLTRB(20, 24, 20, MediaQuery.of(context).padding.bottom + 20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton.icon(
+                          onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                          icon: const Icon(Icons.check_rounded),
+                          label: const Text('Done', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
             ],
           );
         },
@@ -153,38 +367,60 @@ class WorkoutSummaryScreen extends ConsumerWidget {
       ),
     );
   }
-
-  String _formatDuration(int seconds) {
-    final h = seconds ~/ 3600;
-    final m = (seconds % 3600) ~/ 60;
-    if (h > 0) return '${h}h ${m}m';
-    return '${m}m';
-  }
 }
 
-class _StatCard extends StatelessWidget {
-  const _StatCard({required this.icon, required this.label, required this.value});
+class _MetricCard extends StatelessWidget {
+  const _MetricCard({
+    required this.icon,
+    required this.value,
+    required this.unit,
+    required this.label,
+  });
 
   final IconData icon;
-  final String label;
   final String value;
+  final String unit;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border, width: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withValues(alpha: 0.05),
+            AppColors.surface,
+          ],
+        ),
       ),
       child: Column(
         children: [
-          Icon(icon, color: AppColors.primary, size: 22),
+          Icon(icon, color: AppColors.textTertiary, size: 24),
           const SizedBox(height: 8),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-          const SizedBox(height: 2),
-          Text(label, style: const TextStyle(color: AppColors.textTertiary, fontSize: 12)),
+          RichText(
+            text: TextSpan(
+              style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w800, color: AppColors.textPrimary, letterSpacing: -2, height: 1),
+              children: [
+                TextSpan(text: value),
+                if (unit.isNotEmpty)
+                  TextSpan(
+                    text: unit,
+                    style: const TextStyle(fontSize: 24, color: AppColors.textTertiary, fontWeight: FontWeight.w600),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label.toUpperCase(),
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textTertiary, letterSpacing: 1.5),
+          ),
         ],
       ),
     );

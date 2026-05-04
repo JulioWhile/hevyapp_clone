@@ -107,19 +107,43 @@ class RoutineDao extends DatabaseAccessor<AppDatabase> with _$RoutineDaoMixin {
     }).toList();
   }
 
-  /// Update target sets/reps/weight for a template exercise.
+  /// Update target sets/reps/weight/orderIndex/supersetGroupId for a template exercise.
   Future<void> updateTemplateExercise(int id, {
     int? targetSets,
     int? targetReps,
     double? targetWeight,
+    int? orderIndex,
+    int? supersetGroupId,
   }) {
     return (update(workoutTemplateExercises)..where((t) => t.id.equals(id))).write(
       WorkoutTemplateExercisesCompanion(
         targetSets: targetSets != null ? Value(targetSets) : const Value.absent(),
         targetReps: targetReps != null ? Value(targetReps) : const Value.absent(),
         targetWeight: targetWeight != null ? Value(targetWeight) : const Value.absent(),
+        orderIndex: orderIndex != null ? Value(orderIndex) : const Value.absent(),
+        supersetGroupId: supersetGroupId != null ? Value(supersetGroupId) : const Value.absent(),
       ),
     );
+  }
+
+  /// Duplicate a routine with all its exercises.
+  Future<int> duplicateRoutine(int id) async {
+    final original = await getRoutineById(id);
+    final exercises = await getRoutineExercises(id);
+
+    final newId = await createRoutine('${original.name} (Copy)', notes: original.notes);
+    for (final re in exercises) {
+      await addExerciseToRoutine(
+        templateId: newId,
+        exerciseId: re.exercise.id,
+        orderIndex: re.templateExercise.orderIndex,
+        supersetGroupId: re.templateExercise.supersetGroupId,
+        targetSets: re.templateExercise.targetSets,
+        targetReps: re.templateExercise.targetReps,
+        targetWeight: re.templateExercise.targetWeight,
+      );
+    }
+    return newId;
   }
 }
 

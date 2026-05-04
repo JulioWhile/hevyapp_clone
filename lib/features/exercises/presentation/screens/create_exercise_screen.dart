@@ -35,7 +35,7 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
 
     try {
       await ref.read(exerciseDaoProvider).createCustomExercise(
-            name: _nameController.text.trim(),
+            name: _titleCase(_nameController.text.trim()),
             primaryMuscleGroup: _selectedMuscleGroup.name,
             equipment: _selectedEquipment.name,
             exerciseType: _selectedExerciseType.name,
@@ -168,4 +168,11 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
       ),
     );
   }
+}
+
+String _titleCase(String s) {
+  return s.split(' ').map((w) {
+    if (w.isEmpty) return w;
+    return w[0].toUpperCase() + w.substring(1);
+  }).join(' ');
 }

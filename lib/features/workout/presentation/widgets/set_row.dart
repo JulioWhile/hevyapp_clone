@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:hevy_app/app/theme/colors.dart';
-import 'package:hevy_app/core/constants/app_constants.dart';
 import '../providers/workout_providers.dart';
 
 /// A single set row: [type badge] [set#] [previous ghost] [weight] [reps] [✓]
@@ -13,11 +12,13 @@ class SetRow extends ConsumerWidget {
     required this.exerciseIndex,
     required this.setIndex,
     required this.set,
+    this.displayLabel,
   });
 
   final int exerciseIndex;
   final int setIndex;
   final ActiveSet set;
+  final String? displayLabel;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -116,6 +117,17 @@ class SetRow extends ConsumerWidget {
                 },
               ),
             ),
+            const SizedBox(width: 4),
+
+            // ─── Delete button ───────────────────────
+            GestureDetector(
+              onTap: () => ref.read(activeWorkoutProvider.notifier).deleteSet(exerciseIndex, setIndex),
+              child: const SizedBox(
+                width: 32,
+                height: 48,
+                child: Icon(Icons.delete_outline_rounded, color: AppColors.textTertiary, size: 18),
+              ),
+            ),
 
             // ─── Complete checkbox ────────────────────
             SizedBox(
@@ -131,9 +143,11 @@ class SetRow extends ConsumerWidget {
                         isCompleted: willComplete,
                       );
                   if (willComplete) {
-                    ref.read(restTimerProvider.notifier).start(
-                          AppConstants.defaultRestTimerSeconds,
-                        );
+                    final workout = ref.read(activeWorkoutProvider);
+                    final timerSeconds = workout?.exercises[exerciseIndex].restTimerSeconds;
+                    if (timerSeconds != null) {
+                      ref.read(restTimerProvider.notifier).start(timerSeconds);
+                    }
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -160,6 +174,7 @@ class SetRow extends ConsumerWidget {
   }
 
   String get _setTypeLabel {
+    if (displayLabel != null) return displayLabel!;
     return switch (set.setType) {
       'warmup' => 'W',
       'dropset' => 'D',

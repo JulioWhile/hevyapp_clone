@@ -35,11 +35,11 @@ final filteredExercisesProvider = FutureProvider<List<Exercise>>((ref) async {
   final filter = ref.watch(exerciseFilterProvider);
 
   if (filter.query.isNotEmpty && filter.muscleGroup != null) {
-    return dao.searchByMuscleGroup(filter.query, filter.muscleGroup!);
+    return dao.searchByAnyMuscleGroup(filter.query, filter.muscleGroup!);
   } else if (filter.query.isNotEmpty) {
     return dao.searchExercises(filter.query);
   } else if (filter.muscleGroup != null) {
-    return dao.getByMuscleGroup(filter.muscleGroup!);
+    return dao.getByAnyMuscleGroup(filter.muscleGroup!);
   } else {
     return dao.getAllExercises();
   }

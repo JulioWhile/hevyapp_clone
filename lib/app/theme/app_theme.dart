@@ -26,6 +26,14 @@ abstract final class AppTheme {
       scaffoldBackgroundColor: AppColors.background,
       canvasColor: AppColors.background,
 
+      // ─── Page Transitions ───────────────────────────────
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: <TargetPlatform, PageTransitionsBuilder>{
+          TargetPlatform.android: ZoomPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
+
       // ─── Typography ────────────────────────────────────
       textTheme: baseTextTheme.copyWith(
         headlineLarge: GoogleFonts.outfit(

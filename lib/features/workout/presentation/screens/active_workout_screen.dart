@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:hevy_app/app/theme/colors.dart';
+import 'package:hevy_app/core/constants/app_constants.dart';
 import 'package:hevy_app/core/database/app_database.dart';
 import 'package:hevy_app/core/providers/unit_providers.dart';
 import 'package:hevy_app/main.dart';
@@ -333,14 +334,62 @@ class _ExerciseCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border, width: 0.5),
-      ),
-      child: Column(
+    final workout = ref.watch(activeWorkoutProvider);
+    final groupId = exercise.supersetGroupId;
+    final isSuperset = groupId != null;
+
+    // Determine position within the superset group.
+    bool isFirstInGroup = false;
+    bool isLastInGroup = false;
+    bool showSupersetLabel = false;
+    if (isSuperset && workout != null) {
+      final exercises = workout.exercises;
+      isFirstInGroup = exerciseIndex == 0 ||
+          exercises[exerciseIndex - 1].supersetGroupId != groupId;
+      isLastInGroup = exerciseIndex == exercises.length - 1 ||
+          exercises[exerciseIndex + 1].supersetGroupId != groupId;
+      showSupersetLabel = isFirstInGroup;
+    }
+
+    final borderRadius = isSuperset
+        ? BorderRadius.vertical(
+            top: const Radius.circular(12),
+            bottom: isLastInGroup ? const Radius.circular(12) : Radius.zero,
+          )
+        : BorderRadius.circular(12);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (showSupersetLabel)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Row(
+              children: [
+                Icon(Icons.link_rounded, size: 14, color: AppColors.warning),
+                const SizedBox(width: 6),
+                const Text(
+                  'SUPERSET',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.warning,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        Container(
+          margin: isSuperset
+              ? EdgeInsets.fromLTRB(12, isFirstInGroup ? 0 : 0, 12, isLastInGroup ? 4 : 0)
+              : const EdgeInsets.fromLTRB(12, 8, 12, 4),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: borderRadius,
+            border: Border.all(color: isSuperset ? AppColors.warning.withValues(alpha: 0.3) : AppColors.border, width: 0.5),
+          ),
+          child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ─── Exercise header ──────────────────────────
@@ -348,6 +397,19 @@ class _ExerciseCard extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
             child: Row(
               children: [
+                if (exercise.gifUrl != null) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: Image.asset(
+                      'assets/gifs/${exercise.gifUrl}',
+                      width: 36,
+                      height: 36,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                ],
                 Expanded(
                   child: Text(
                     exercise.exerciseName,
@@ -358,6 +420,8 @@ class _ExerciseCard extends ConsumerWidget {
                     ),
                   ),
                 ),
+                _RestTimerChip(exerciseIndex: exerciseIndex, exercise: exercise),
+                const SizedBox(width: 4),
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_horiz_rounded, color: AppColors.textTertiary, size: 20),
                   color: AppColors.surfaceElevated,
@@ -430,13 +494,39 @@ class _ExerciseCard extends ConsumerWidget {
           const SizedBox(height: 4),
 
           // ─── Set rows ─────────────────────────────────
-          ...exercise.sets.asMap().entries.map((entry) {
+          ...(() {
+            int normal = 0;
+            return exercise.sets.map((s) {
+              if (s.setType == 'normal') return '${++normal}';
+              return switch (s.setType) {
+                'warmup' => 'W',
+                'dropset' => 'D',
+                'failure' => 'F',
+                _ => '${s.setNumber}',
+              };
+            }).toList();
+          })().asMap().entries.map((entry) {
             final setIndex = entry.key;
-            final set = entry.value;
-            return SetRow(
-              exerciseIndex: exerciseIndex,
-              setIndex: setIndex,
-              set: set,
+            final set = exercise.sets[setIndex];
+            return TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: Duration(milliseconds: 250 + setIndex * 40),
+              curve: Curves.easeOut,
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Transform.translate(
+                    offset: Offset(0, 8 * (1 - value)),
+                    child: child,
+                  ),
+                );
+              },
+              child: SetRow(
+                exerciseIndex: exerciseIndex,
+                setIndex: setIndex,
+                set: set,
+                displayLabel: entry.value,
+              ),
             );
           }),
 
@@ -464,8 +554,110 @@ class _ExerciseCard extends ConsumerWidget {
           ),
         ],
       ),
+        ),
+      ],
     );
   }
+}
+
+/// Tappable chip showing the rest timer duration for an exercise.
+class _RestTimerChip extends ConsumerWidget {
+  const _RestTimerChip({required this.exerciseIndex, required this.exercise});
+
+  final int exerciseIndex;
+  final ActiveExercise exercise;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final seconds = exercise.restTimerSeconds;
+    return GestureDetector(
+      onTap: () => _showRestTimerPicker(context, ref, exerciseIndex),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: seconds != null
+              ? AppColors.primary.withValues(alpha: 0.12)
+              : AppColors.textTertiary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: seconds != null
+                ? AppColors.primary.withValues(alpha: 0.25)
+                : Colors.transparent,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.timer_outlined,
+              size: 14,
+              color: seconds != null ? AppColors.primary : AppColors.textTertiary,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              seconds != null ? '${seconds}s' : 'OFF',
+              style: TextStyle(
+                color: seconds != null ? AppColors.primary : AppColors.textTertiary,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+void _showRestTimerPicker(BuildContext context, WidgetRef ref, int exerciseIndex) {
+  final workout = ref.read(activeWorkoutProvider);
+  final current = workout?.exercises[exerciseIndex].restTimerSeconds;
+
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: AppColors.surfaceElevated,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (ctx) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Text('Rest Timer', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            ),
+            ListTile(
+              leading: const Icon(Icons.timer_off_outlined, color: AppColors.textTertiary),
+              title: const Text('OFF'),
+              subtitle: const Text('No auto-start on set completion', style: TextStyle(fontSize: 12)),
+              trailing: current == null ? const Icon(Icons.check_rounded, color: AppColors.primary) : null,
+              onTap: () {
+                ref.read(activeWorkoutProvider.notifier).updateExerciseRestTimer(exerciseIndex, null);
+                Navigator.pop(ctx);
+              },
+            ),
+            const Divider(height: 1),
+            ...AppConstants.restTimerPresets.map((seconds) {
+              final label = seconds >= 60 ? '${seconds ~/ 60}m' : '${seconds}s';
+              return ListTile(
+                leading: Icon(Icons.timer_outlined, color: AppColors.primary.withValues(alpha: 0.6)),
+                title: Text('$label (${seconds}s)'),
+                trailing: current == seconds ? const Icon(Icons.check_rounded, color: AppColors.primary) : null,
+                onTap: () {
+                  ref.read(activeWorkoutProvider.notifier).updateExerciseRestTimer(exerciseIndex, seconds);
+                  Navigator.pop(ctx);
+                },
+              );
+            }),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 final _previousPerformanceProvider = FutureProvider.family<List<WorkoutSet>, int>((ref, exerciseId) {

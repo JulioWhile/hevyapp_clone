@@ -79,6 +79,26 @@ class $ExercisesTable extends Exercises
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _gifUrlMeta = const VerificationMeta('gifUrl');
+  @override
+  late final GeneratedColumn<String> gifUrl = GeneratedColumn<String>(
+    'gif_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _instructionsMeta = const VerificationMeta(
+    'instructions',
+  );
+  @override
+  late final GeneratedColumn<String> instructions = GeneratedColumn<String>(
+    'instructions',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isCustomMeta = const VerificationMeta(
     'isCustom',
   );
@@ -114,6 +134,8 @@ class $ExercisesTable extends Exercises
     secondaryMuscleGroups,
     equipment,
     exerciseType,
+    gifUrl,
+    instructions,
     isCustom,
     createdAt,
   ];
@@ -179,6 +201,21 @@ class $ExercisesTable extends Exercises
     } else if (isInserting) {
       context.missing(_exerciseTypeMeta);
     }
+    if (data.containsKey('gif_url')) {
+      context.handle(
+        _gifUrlMeta,
+        gifUrl.isAcceptableOrUnknown(data['gif_url']!, _gifUrlMeta),
+      );
+    }
+    if (data.containsKey('instructions')) {
+      context.handle(
+        _instructionsMeta,
+        instructions.isAcceptableOrUnknown(
+          data['instructions']!,
+          _instructionsMeta,
+        ),
+      );
+    }
     if (data.containsKey('is_custom')) {
       context.handle(
         _isCustomMeta,
@@ -224,6 +261,14 @@ class $ExercisesTable extends Exercises
         DriftSqlType.string,
         data['${effectivePrefix}exercise_type'],
       )!,
+      gifUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}gif_url'],
+      ),
+      instructions: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}instructions'],
+      ),
       isCustom: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_custom'],
@@ -248,6 +293,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
   final String? secondaryMuscleGroups;
   final String equipment;
   final String exerciseType;
+  final String? gifUrl;
+  final String? instructions;
   final bool isCustom;
   final DateTime createdAt;
   const Exercise({
@@ -257,6 +304,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     this.secondaryMuscleGroups,
     required this.equipment,
     required this.exerciseType,
+    this.gifUrl,
+    this.instructions,
     required this.isCustom,
     required this.createdAt,
   });
@@ -271,6 +320,12 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     }
     map['equipment'] = Variable<String>(equipment);
     map['exercise_type'] = Variable<String>(exerciseType);
+    if (!nullToAbsent || gifUrl != null) {
+      map['gif_url'] = Variable<String>(gifUrl);
+    }
+    if (!nullToAbsent || instructions != null) {
+      map['instructions'] = Variable<String>(instructions);
+    }
     map['is_custom'] = Variable<bool>(isCustom);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -286,6 +341,12 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           : Value(secondaryMuscleGroups),
       equipment: Value(equipment),
       exerciseType: Value(exerciseType),
+      gifUrl: gifUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(gifUrl),
+      instructions: instructions == null && nullToAbsent
+          ? const Value.absent()
+          : Value(instructions),
       isCustom: Value(isCustom),
       createdAt: Value(createdAt),
     );
@@ -307,6 +368,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       ),
       equipment: serializer.fromJson<String>(json['equipment']),
       exerciseType: serializer.fromJson<String>(json['exerciseType']),
+      gifUrl: serializer.fromJson<String?>(json['gifUrl']),
+      instructions: serializer.fromJson<String?>(json['instructions']),
       isCustom: serializer.fromJson<bool>(json['isCustom']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -323,6 +386,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       ),
       'equipment': serializer.toJson<String>(equipment),
       'exerciseType': serializer.toJson<String>(exerciseType),
+      'gifUrl': serializer.toJson<String?>(gifUrl),
+      'instructions': serializer.toJson<String?>(instructions),
       'isCustom': serializer.toJson<bool>(isCustom),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -335,6 +400,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     Value<String?> secondaryMuscleGroups = const Value.absent(),
     String? equipment,
     String? exerciseType,
+    Value<String?> gifUrl = const Value.absent(),
+    Value<String?> instructions = const Value.absent(),
     bool? isCustom,
     DateTime? createdAt,
   }) => Exercise(
@@ -346,6 +413,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
         : this.secondaryMuscleGroups,
     equipment: equipment ?? this.equipment,
     exerciseType: exerciseType ?? this.exerciseType,
+    gifUrl: gifUrl.present ? gifUrl.value : this.gifUrl,
+    instructions: instructions.present ? instructions.value : this.instructions,
     isCustom: isCustom ?? this.isCustom,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -363,6 +432,10 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       exerciseType: data.exerciseType.present
           ? data.exerciseType.value
           : this.exerciseType,
+      gifUrl: data.gifUrl.present ? data.gifUrl.value : this.gifUrl,
+      instructions: data.instructions.present
+          ? data.instructions.value
+          : this.instructions,
       isCustom: data.isCustom.present ? data.isCustom.value : this.isCustom,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -377,6 +450,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           ..write('secondaryMuscleGroups: $secondaryMuscleGroups, ')
           ..write('equipment: $equipment, ')
           ..write('exerciseType: $exerciseType, ')
+          ..write('gifUrl: $gifUrl, ')
+          ..write('instructions: $instructions, ')
           ..write('isCustom: $isCustom, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -391,6 +466,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     secondaryMuscleGroups,
     equipment,
     exerciseType,
+    gifUrl,
+    instructions,
     isCustom,
     createdAt,
   );
@@ -404,6 +481,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           other.secondaryMuscleGroups == this.secondaryMuscleGroups &&
           other.equipment == this.equipment &&
           other.exerciseType == this.exerciseType &&
+          other.gifUrl == this.gifUrl &&
+          other.instructions == this.instructions &&
           other.isCustom == this.isCustom &&
           other.createdAt == this.createdAt);
 }
@@ -415,6 +494,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
   final Value<String?> secondaryMuscleGroups;
   final Value<String> equipment;
   final Value<String> exerciseType;
+  final Value<String?> gifUrl;
+  final Value<String?> instructions;
   final Value<bool> isCustom;
   final Value<DateTime> createdAt;
   const ExercisesCompanion({
@@ -424,6 +505,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     this.secondaryMuscleGroups = const Value.absent(),
     this.equipment = const Value.absent(),
     this.exerciseType = const Value.absent(),
+    this.gifUrl = const Value.absent(),
+    this.instructions = const Value.absent(),
     this.isCustom = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
@@ -434,6 +517,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     this.secondaryMuscleGroups = const Value.absent(),
     required String equipment,
     required String exerciseType,
+    this.gifUrl = const Value.absent(),
+    this.instructions = const Value.absent(),
     this.isCustom = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : name = Value(name),
@@ -447,6 +532,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     Expression<String>? secondaryMuscleGroups,
     Expression<String>? equipment,
     Expression<String>? exerciseType,
+    Expression<String>? gifUrl,
+    Expression<String>? instructions,
     Expression<bool>? isCustom,
     Expression<DateTime>? createdAt,
   }) {
@@ -459,6 +546,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
         'secondary_muscle_groups': secondaryMuscleGroups,
       if (equipment != null) 'equipment': equipment,
       if (exerciseType != null) 'exercise_type': exerciseType,
+      if (gifUrl != null) 'gif_url': gifUrl,
+      if (instructions != null) 'instructions': instructions,
       if (isCustom != null) 'is_custom': isCustom,
       if (createdAt != null) 'created_at': createdAt,
     });
@@ -471,6 +560,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     Value<String?>? secondaryMuscleGroups,
     Value<String>? equipment,
     Value<String>? exerciseType,
+    Value<String?>? gifUrl,
+    Value<String?>? instructions,
     Value<bool>? isCustom,
     Value<DateTime>? createdAt,
   }) {
@@ -482,6 +573,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
           secondaryMuscleGroups ?? this.secondaryMuscleGroups,
       equipment: equipment ?? this.equipment,
       exerciseType: exerciseType ?? this.exerciseType,
+      gifUrl: gifUrl ?? this.gifUrl,
+      instructions: instructions ?? this.instructions,
       isCustom: isCustom ?? this.isCustom,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -510,6 +603,12 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     if (exerciseType.present) {
       map['exercise_type'] = Variable<String>(exerciseType.value);
     }
+    if (gifUrl.present) {
+      map['gif_url'] = Variable<String>(gifUrl.value);
+    }
+    if (instructions.present) {
+      map['instructions'] = Variable<String>(instructions.value);
+    }
     if (isCustom.present) {
       map['is_custom'] = Variable<bool>(isCustom.value);
     }
@@ -528,6 +627,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
           ..write('secondaryMuscleGroups: $secondaryMuscleGroups, ')
           ..write('equipment: $equipment, ')
           ..write('exerciseType: $exerciseType, ')
+          ..write('gifUrl: $gifUrl, ')
+          ..write('instructions: $instructions, ')
           ..write('isCustom: $isCustom, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -3620,6 +3721,8 @@ typedef $$ExercisesTableCreateCompanionBuilder =
       Value<String?> secondaryMuscleGroups,
       required String equipment,
       required String exerciseType,
+      Value<String?> gifUrl,
+      Value<String?> instructions,
       Value<bool> isCustom,
       Value<DateTime> createdAt,
     });
@@ -3631,6 +3734,8 @@ typedef $$ExercisesTableUpdateCompanionBuilder =
       Value<String?> secondaryMuscleGroups,
       Value<String> equipment,
       Value<String> exerciseType,
+      Value<String?> gifUrl,
+      Value<String?> instructions,
       Value<bool> isCustom,
       Value<DateTime> createdAt,
     });
@@ -3750,6 +3855,16 @@ class $$ExercisesTableFilterComposer
 
   ColumnFilters<String> get exerciseType => $composableBuilder(
     column: $table.exerciseType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get gifUrl => $composableBuilder(
+    column: $table.gifUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get instructions => $composableBuilder(
+    column: $table.instructions,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3880,6 +3995,16 @@ class $$ExercisesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get gifUrl => $composableBuilder(
+    column: $table.gifUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get instructions => $composableBuilder(
+    column: $table.instructions,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isCustom => $composableBuilder(
     column: $table.isCustom,
     builder: (column) => ColumnOrderings(column),
@@ -3921,6 +4046,14 @@ class $$ExercisesTableAnnotationComposer
 
   GeneratedColumn<String> get exerciseType => $composableBuilder(
     column: $table.exerciseType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get gifUrl =>
+      $composableBuilder(column: $table.gifUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get instructions => $composableBuilder(
+    column: $table.instructions,
     builder: (column) => column,
   );
 
@@ -4046,6 +4179,8 @@ class $$ExercisesTableTableManager
                 Value<String?> secondaryMuscleGroups = const Value.absent(),
                 Value<String> equipment = const Value.absent(),
                 Value<String> exerciseType = const Value.absent(),
+                Value<String?> gifUrl = const Value.absent(),
+                Value<String?> instructions = const Value.absent(),
                 Value<bool> isCustom = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => ExercisesCompanion(
@@ -4055,6 +4190,8 @@ class $$ExercisesTableTableManager
                 secondaryMuscleGroups: secondaryMuscleGroups,
                 equipment: equipment,
                 exerciseType: exerciseType,
+                gifUrl: gifUrl,
+                instructions: instructions,
                 isCustom: isCustom,
                 createdAt: createdAt,
               ),
@@ -4066,6 +4203,8 @@ class $$ExercisesTableTableManager
                 Value<String?> secondaryMuscleGroups = const Value.absent(),
                 required String equipment,
                 required String exerciseType,
+                Value<String?> gifUrl = const Value.absent(),
+                Value<String?> instructions = const Value.absent(),
                 Value<bool> isCustom = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => ExercisesCompanion.insert(
@@ -4075,6 +4214,8 @@ class $$ExercisesTableTableManager
                 secondaryMuscleGroups: secondaryMuscleGroups,
                 equipment: equipment,
                 exerciseType: exerciseType,
+                gifUrl: gifUrl,
+                instructions: instructions,
                 isCustom: isCustom,
                 createdAt: createdAt,
               ),

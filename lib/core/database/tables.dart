@@ -9,6 +9,8 @@ class Exercises extends Table {
   TextColumn get secondaryMuscleGroups => text().nullable()();
   TextColumn get equipment => text()();
   TextColumn get exerciseType => text()();
+  TextColumn get gifUrl => text().nullable()();
+  TextColumn get instructions => text().nullable()();
   BoolColumn get isCustom => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }

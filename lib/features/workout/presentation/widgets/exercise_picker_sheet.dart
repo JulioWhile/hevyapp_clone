@@ -19,6 +19,8 @@ class _ExercisePickerSheetState extends ConsumerState<ExercisePickerSheet> {
   final _searchController = TextEditingController();
   String _query = '';
   final Set<int> _selectedIds = {};
+  bool _isSuperset = false;
+  static int _supersetCounter = 0;
 
   @override
   void dispose() {
@@ -144,19 +146,21 @@ class _ExercisePickerSheetState extends ConsumerState<ExercisePickerSheet> {
 
                     return ListTile(
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                      leading: Container(
-                        width: 36,
-                        height: 36,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppColors.primary.withValues(alpha: 0.2)
-                              : AppColors.surfaceHighlight,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: isSelected
-                            ? const Icon(Icons.check_rounded, color: AppColors.primary, size: 20)
-                            : Icon(Icons.fitness_center_rounded, color: AppColors.textTertiary, size: 18),
+                      leading: SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: exercise.gifUrl != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.asset(
+                                  'assets/gifs/${exercise.gifUrl}',
+                                  width: 40,
+                                  height: 40,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => _pickerFallback(isSelected),
+                                ),
+                              )
+                            : _pickerFallback(isSelected),
                       ),
                       title: Text(
                         exercise.name,
@@ -194,13 +198,40 @@ class _ExercisePickerSheetState extends ConsumerState<ExercisePickerSheet> {
             SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _addSelected,
-                    child: Text('Add ${_selectedIds.length} Exercise${_selectedIds.length > 1 ? 's' : ''}'),
-                  ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_selectedIds.length > 1)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.link_rounded,
+                              size: 18,
+                              color: _isSuperset ? AppColors.primary : AppColors.textTertiary,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('Superset', style: TextStyle(fontSize: 14)),
+                            const Spacer(),
+                            Switch(
+                              value: _isSuperset,
+                              onChanged: (v) => setState(() => _isSuperset = v),
+                              activeTrackColor: AppColors.primary.withValues(alpha: 0.3),
+                              activeThumbColor: AppColors.primary,
+                            ),
+                          ],
+                        ),
+                      ),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: _addSelected,
+                        child: Text('Add ${_selectedIds.length} Exercise${_selectedIds.length > 1 ? 's' : ''}${_isSuperset ? ' as Superset' : ''}'),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -211,9 +242,10 @@ class _ExercisePickerSheetState extends ConsumerState<ExercisePickerSheet> {
 
   Future<void> _addSelected() async {
     final dao = ref.read(exerciseDaoProvider);
+    final int? groupId = _isSuperset ? ++_supersetCounter : null;
     for (final id in _selectedIds) {
       final exercise = await dao.getById(id);
-      await ref.read(activeWorkoutProvider.notifier).addExercise(exercise);
+      await ref.read(activeWorkoutProvider.notifier).addExercise(exercise, supersetGroupId: groupId);
     }
     if (mounted) {
       // Reset the search filter.
@@ -227,5 +259,22 @@ class _ExercisePickerSheetState extends ConsumerState<ExercisePickerSheet> {
   String _capitalize(String s) {
     if (s.isEmpty) return s;
     return s[0].toUpperCase() + s.substring(1);
+  }
+
+  Widget _pickerFallback(bool isSelected) {
+    return Container(
+      width: 40,
+      height: 40,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: isSelected
+            ? AppColors.primary.withValues(alpha: 0.2)
+            : AppColors.surfaceHighlight,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: isSelected
+          ? const Icon(Icons.check_rounded, color: AppColors.primary, size: 20)
+          : const Icon(Icons.fitness_center_rounded, color: AppColors.textTertiary, size: 18),
+    );
   }
 }

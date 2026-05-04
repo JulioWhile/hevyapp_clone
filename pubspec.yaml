@@ -34,6 +34,12 @@ dependencies:
   json_annotation: ^4.9.0
   fl_chart: ^1.2.0
 
+  # Audio
+  audioplayers: ^6.4.0
+
+  # Sharing
+  share_plus: ^10.1.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -51,3 +57,5 @@ flutter:
 
   assets:
     - assets/data/
+    - assets/gifs/
+    - assets/sounds/
