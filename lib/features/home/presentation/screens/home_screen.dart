@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:hevy_app/app/router.dart';
 import 'package:hevy_app/app/theme/colors.dart';
 import 'package:hevy_app/core/database/app_database.dart';
 import 'package:hevy_app/core/providers/unit_providers.dart';
@@ -30,151 +32,220 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final activeWorkout = ref.watch(activeWorkoutProvider);
+    final resumableWorkout = activeWorkout?.isActive == true
+        ? activeWorkout
+        : null;
     final routinesAsync = ref.watch(routinesProvider);
     final historyAsync = ref.watch(workoutHistoryProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        bottom: false,
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            // ─── Top App Bar ─────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.fitness_center_rounded, color: AppColors.primary, size: 22),
-                      const SizedBox(width: 6),
-                      Text(
-                        'HEVY',
-                        style: GoogleFonts.outfit(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.primary,
-                          letterSpacing: -0.5,
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.primaryMuted.withValues(alpha: 0.36),
+              AppColors.background,
+              AppColors.background,
+            ],
+            stops: const [0, 0.28, 1],
+          ),
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              // ─── Top App Bar ─────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface.withValues(alpha: 0.76),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: AppColors.border.withValues(alpha: 0.65),
                         ),
                       ),
-                    ],
-                  ),
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceElevated,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
-                    ),
-                    child: const Icon(Icons.person_rounded, color: AppColors.textSecondary, size: 20),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // ─── Greeting ─────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _greeting(),
-                    style: GoogleFonts.outfit(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                      letterSpacing: -0.5,
-                      height: 1.1,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Ready to crush it today?',
-                    style: TextStyle(fontSize: 16, color: AppColors.textSecondary, height: 1.4),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // ─── Active Workout Banner ────────────────────────
-            if (activeWorkout != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                child: _ActiveBanner(workout: activeWorkout),
-              ),
-
-            // ─── Today's Workout Bento Card ───────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: routinesAsync.when(
-                data: (routines) => routines.isNotEmpty
-                    ? _TodaysWorkoutCard(routine: routines.first, ref: ref)
-                    : _QuickStartCard(ref: ref),
-                loading: () => _QuickStartCard(ref: ref),
-                error: (_, __) => _QuickStartCard(ref: ref),
-              ),
-            ),
-
-            const SizedBox(height: 28),
-
-            // ─── Suggested Routines ───────────────────────────
-            routinesAsync.when(
-              data: (routines) {
-                if (routines.isEmpty) return const SizedBox.shrink();
-                return _SuggestedRoutinesSection(routines: routines);
-              },
-              loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
-            ),
-
-            const SizedBox(height: 28),
-
-            // ─── Recent Activity ──────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const _SectionLabel('Recent Activity'),
-                  const SizedBox(height: 12),
-                  historyAsync.when(
-                    data: (workouts) {
-                      if (workouts.isEmpty) {
-                        return _EmptyActivityState();
-                      }
-                      return Column(
+                      child: Row(
                         children: [
-                          ...workouts.take(3).map((w) => _ActivityItem(workout: w)),
-                          const SizedBox(height: 4),
-                          Center(
-                            child: TextButton(
-                              onPressed: () {},
-                              child: const Text(
-                                'View All History',
-                                style: TextStyle(color: AppColors.textTertiary, fontSize: 13),
-                              ),
+                          Icon(
+                            Icons.fitness_center_rounded,
+                            color: AppColors.primaryVariant,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 7),
+                          Text(
+                            'HEVY',
+                            style: GoogleFonts.lexend(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
+                              letterSpacing: 0,
                             ),
                           ),
                         ],
-                      );
-                    },
-                    loading: () => const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator())),
-                    error: (e, _) => Text('Error: $e'),
-                  ),
-                ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface.withValues(alpha: 0.76),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: AppColors.border.withValues(alpha: 0.65),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.calendar_today_rounded,
+                            color: AppColors.warning,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 7),
+                          Text(
+                            DateFormat('MMM d').format(DateTime.now()),
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            const SizedBox(height: 120),
-          ],
+              const SizedBox(height: 24),
+
+              // ─── Greeting ─────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _greeting(),
+                      style: GoogleFonts.lexend(
+                        fontSize: 34,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                        letterSpacing: 0,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Ready to crush it today?',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: AppColors.textSecondary,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // ─── Active Workout Banner ────────────────────────
+              if (resumableWorkout != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                  child: _ActiveBanner(workout: resumableWorkout),
+                ),
+
+              // ─── Today's Workout Bento Card ───────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: routinesAsync.when(
+                  data: (routines) => routines.isNotEmpty
+                      ? _TodaysWorkoutCard(routine: routines.first, ref: ref)
+                      : _QuickStartCard(ref: ref),
+                  loading: () => _QuickStartCard(ref: ref),
+                  error: (_, _) => _QuickStartCard(ref: ref),
+                ),
+              ),
+
+              const SizedBox(height: 28),
+
+              // ─── Suggested Routines ───────────────────────────
+              routinesAsync.when(
+                data: (routines) {
+                  if (routines.isEmpty) return const SizedBox.shrink();
+                  return _SuggestedRoutinesSection(routines: routines);
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
+              ),
+
+              const SizedBox(height: 28),
+
+              // ─── Recent Activity ──────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const _SectionLabel('Recent Activity'),
+                    const SizedBox(height: 12),
+                    historyAsync.when(
+                      data: (workouts) {
+                        if (workouts.isEmpty) {
+                          return _EmptyActivityState();
+                        }
+                        return Column(
+                          children: [
+                            ...workouts
+                                .take(3)
+                                .map((w) => _ActivityItem(workout: w)),
+                            const SizedBox(height: 4),
+                            Center(
+                              child: TextButton(
+                                onPressed: () => context.go(AppRoutes.history),
+                                child: const Text(
+                                  'View All History',
+                                  style: TextStyle(
+                                    color: AppColors.textTertiary,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                      loading: () => const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(24),
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+                      error: (e, _) => Text('Error: $e'),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 120),
+            ],
+          ),
         ),
       ),
     );
@@ -212,11 +283,23 @@ class _TodaysWorkoutCard extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.surfaceElevated,
+            AppColors.surface,
+            AppColors.surfaceDim,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.26)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 16, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.14),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
         ],
       ),
       child: Column(
@@ -233,11 +316,11 @@ class _TodaysWorkoutCard extends ConsumerWidget {
                 // Routine title
                 Text(
                   routine.name,
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.lexend(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
-                    letterSpacing: -0.3,
+                    letterSpacing: 0,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -248,18 +331,33 @@ class _TodaysWorkoutCard extends ConsumerWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Est. Time', style: TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+                          const Text(
+                            'Est. Time',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textTertiary,
+                            ),
+                          ),
                           const SizedBox(height: 2),
                           RichText(
                             text: TextSpan(
                               children: [
                                 TextSpan(
                                   text: '${detail.exercises.length * 12}',
-                                  style: GoogleFonts.outfit(fontSize: 48, fontWeight: FontWeight.w700, color: AppColors.textPrimary, height: 1),
+                                  style: GoogleFonts.lexend(
+                                    fontSize: 48,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.primaryVariant,
+                                    height: 1,
+                                  ),
                                 ),
                                 TextSpan(
                                   text: ' min',
-                                  style: TextStyle(fontSize: 18, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ],
                             ),
@@ -270,24 +368,37 @@ class _TodaysWorkoutCard extends ConsumerWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Exercises', style: TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+                          const Text(
+                            'Exercises',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textTertiary,
+                            ),
+                          ),
                           const SizedBox(height: 2),
                           Text(
                             '${detail.exercises.length}',
-                            style: GoogleFonts.outfit(fontSize: 48, fontWeight: FontWeight.w700, color: AppColors.textPrimary, height: 1),
+                            style: GoogleFonts.lexend(
+                              fontSize: 48,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.accent,
+                              height: 1,
+                            ),
                           ),
                         ],
                       ),
                     ],
                   ),
                   loading: () => const SizedBox(height: 56),
-                  error: (_, __) => const SizedBox.shrink(),
+                  error: (_, _) => const SizedBox.shrink(),
                 ),
                 const SizedBox(height: 16),
                 // Exercise chips
                 detailAsync.when(
                   data: (detail) {
-                    if (detail.exercises.isEmpty) return const SizedBox.shrink();
+                    if (detail.exercises.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
                     final shown = detail.exercises.take(2).toList();
                     final extra = detail.exercises.length - shown.length;
                     return Wrap(
@@ -300,7 +411,7 @@ class _TodaysWorkoutCard extends ConsumerWidget {
                     );
                   },
                   loading: () => const SizedBox.shrink(),
-                  error: (_, __) => const SizedBox.shrink(),
+                  error: (_, _) => const SizedBox.shrink(),
                 ),
               ],
             ),
@@ -308,18 +419,28 @@ class _TodaysWorkoutCard extends ConsumerWidget {
           // Full-width Start button at bottom
           InkWell(
             onTap: () => _startRoutine(context, widgetRef),
-            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(8),
+            ),
             child: Container(
               width: double.infinity,
               height: 52,
               decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+                gradient: const LinearGradient(
+                  colors: [AppColors.primary, AppColors.primaryVariant],
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(8),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 22),
+                  const Icon(
+                    Icons.play_arrow_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'START WORKOUT',
@@ -345,17 +466,29 @@ class _TodaysWorkoutCard extends ConsumerWidget {
     final exercises = await dao.getRoutineExercises(routine.id);
     final db = ref.read(databaseProvider);
 
-    await ref.read(activeWorkoutProvider.notifier).startWorkout(name: routine.name, templateId: routine.id);
+    await ref
+        .read(activeWorkoutProvider.notifier)
+        .startWorkout(name: routine.name, templateId: routine.id);
     for (final re in exercises) {
       final exercise = await db.exerciseDao.getById(re.exercise.id);
-      await ref.read(activeWorkoutProvider.notifier).addExercise(exercise, supersetGroupId: re.templateExercise.supersetGroupId);
+      await ref
+          .read(activeWorkoutProvider.notifier)
+          .addExercise(
+            exercise,
+            supersetGroupId: re.templateExercise.supersetGroupId,
+          );
       final idx = ref.read(activeWorkoutProvider)!.exercises.length - 1;
       for (int i = 1; i < re.templateExercise.targetSets; i++) {
         await ref.read(activeWorkoutProvider.notifier).addSet(idx);
       }
     }
     if (context.mounted) {
-      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ActiveWorkoutScreen(), fullscreenDialog: true));
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const ActiveWorkoutScreen(),
+          fullscreenDialog: true,
+        ),
+      );
     }
   }
 }
@@ -370,8 +503,8 @@ class _QuickStartCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.7)),
       ),
       child: Column(
         children: [
@@ -384,12 +517,20 @@ class _QuickStartCard extends StatelessWidget {
                 const SizedBox(height: 10),
                 Text(
                   'No Routine Yet',
-                  style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                  style: GoogleFonts.lexend(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Start an empty workout to begin logging, or create a Routine first.',
-                  style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.5),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                    height: 1.5,
+                  ),
                 ),
               ],
             ),
@@ -399,23 +540,40 @@ class _QuickStartCard extends StatelessWidget {
               HapticFeedback.mediumImpact();
               await ref.read(activeWorkoutProvider.notifier).startWorkout();
               if (context.mounted) {
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ActiveWorkoutScreen(), fullscreenDialog: true));
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const ActiveWorkoutScreen(),
+                    fullscreenDialog: true,
+                  ),
+                );
               }
             },
-            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(8),
+            ),
             child: Container(
               width: double.infinity,
               height: 52,
               decoration: BoxDecoration(
                 color: AppColors.primary,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(8),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(Icons.add_rounded, color: Colors.white, size: 22),
                   const SizedBox(width: 8),
-                  const Text('START EMPTY WORKOUT', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15, letterSpacing: 1)),
+                  const Text(
+                    'START EMPTY WORKOUT',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      letterSpacing: 1,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -440,7 +598,14 @@ class _ExerciseChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
       ),
-      child: Text(name, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+      child: Text(
+        name,
+        style: const TextStyle(
+          fontSize: 12,
+          color: AppColors.textSecondary,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
     );
   }
 }
@@ -465,8 +630,19 @@ class _SuggestedRoutinesSection extends ConsumerWidget {
                 onTap: () {},
                 child: Row(
                   children: [
-                    Text('See All', style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
-                    Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.primary),
+                    Text(
+                      'See All',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
                   ],
                 ),
               ),
@@ -480,8 +656,9 @@ class _SuggestedRoutinesSection extends ConsumerWidget {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             itemCount: routines.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
-            itemBuilder: (context, index) => _RoutineCard(routine: routines[index]),
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, index) =>
+                _RoutineCard(routine: routines[index]),
           ),
         ),
       ],
@@ -506,14 +683,24 @@ class _RoutineCard extends ConsumerWidget {
 
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => RoutineEditorScreen(routineId: routine.id)),
+        MaterialPageRoute(
+          builder: (_) => RoutineEditorScreen(routineId: routine.id),
+        ),
       ),
       child: Container(
         width: 200,
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              color.withValues(alpha: 0.12),
+              AppColors.surface,
+              AppColors.surfaceDim,
+            ],
+          ),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withValues(alpha: 0.24)),
         ),
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -533,7 +720,11 @@ class _RoutineCard extends ConsumerWidget {
             // Name
             Text(
               routine.name,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -541,29 +732,41 @@ class _RoutineCard extends ConsumerWidget {
             const SizedBox(height: 4),
             detailAsync.when(
               data: (d) => Text(
-                d.exercises.isEmpty ? 'No exercises yet' : d.exercises.map((e) => e.exercise.name).join(', '),
-                style: const TextStyle(fontSize: 12, color: AppColors.textTertiary),
+                d.exercises.isEmpty
+                    ? 'No exercises yet'
+                    : d.exercises.map((e) => e.exercise.name).join(', '),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textTertiary,
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
               loading: () => const SizedBox(height: 12),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (_, _) => const SizedBox.shrink(),
             ),
             const Spacer(),
             // Bottom meta
             detailAsync.when(
               data: (d) => Row(
                 children: [
-                  Icon(Icons.timer_outlined, size: 14, color: AppColors.textTertiary),
+                  Icon(
+                    Icons.timer_outlined,
+                    size: 14,
+                    color: AppColors.textTertiary,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     '${d.exercises.length * 12} min',
-                    style: const TextStyle(fontSize: 12, color: AppColors.textTertiary),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textTertiary,
+                    ),
                   ),
                 ],
               ),
               loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (_, _) => const SizedBox.shrink(),
             ),
           ],
         ),
@@ -580,39 +783,70 @@ class _ActiveBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(8),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+            color: AppColors.primary.withValues(alpha: 0.18),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.36),
+            ),
           ),
           child: InkWell(
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const ActiveWorkoutScreen(), fullscreenDialog: true),
+              MaterialPageRoute(
+                builder: (_) => const ActiveWorkoutScreen(),
+                fullscreenDialog: true,
+              ),
             ),
             child: Row(
               children: [
                 Container(
                   width: 36,
                   height: 36,
-                  decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.2), shape: BoxShape.circle),
-                  child: const Icon(Icons.play_arrow_rounded, color: AppColors.primary, size: 20),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow_rounded,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(workout.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-                      Text('${workout.exercises.length} exercises · In progress', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                      Text(
+                        workout.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+                      Text(
+                        '${workout.exercises.length} exercises · In progress',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                Text('Resume', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 13)),
+                Text(
+                  'Resume',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
               ],
             ),
           ),
@@ -639,13 +873,15 @@ class _ActivityItem extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.55)),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => WorkoutDetailScreen(workoutId: workout.id)),
+          MaterialPageRoute(
+            builder: (_) => WorkoutDetailScreen(workoutId: workout.id),
+          ),
         ),
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -657,14 +893,32 @@ class _ActivityItem extends ConsumerWidget {
                 height: 48,
                 decoration: BoxDecoration(
                   color: AppColors.surfaceElevated,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.22),
+                  ),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(day, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: AppColors.textPrimary, height: 1)),
-                    Text(month.toUpperCase(), style: const TextStyle(fontSize: 10, color: AppColors.textTertiary, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                    Text(
+                      day,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                        color: AppColors.textPrimary,
+                        height: 1,
+                      ),
+                    ),
+                    Text(
+                      month.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: AppColors.textTertiary,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -674,30 +928,60 @@ class _ActivityItem extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(workout.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: AppColors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text(
+                      workout.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: AppColors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     const SizedBox(height: 4),
                     detailAsync.when(
                       data: (data) => Row(
                         children: [
-                          Icon(Icons.timer_outlined, size: 13, color: AppColors.textTertiary),
+                          Icon(
+                            Icons.timer_outlined,
+                            size: 13,
+                            color: AppColors.textTertiary,
+                          ),
                           const SizedBox(width: 3),
-                          Text(duration, style: const TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+                          Text(
+                            duration,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textTertiary,
+                            ),
+                          ),
                           const SizedBox(width: 12),
-                          Icon(Icons.fitness_center_rounded, size: 13, color: AppColors.textTertiary),
+                          Icon(
+                            Icons.fitness_center_rounded,
+                            size: 13,
+                            color: AppColors.textTertiary,
+                          ),
                           const SizedBox(width: 3),
                           Text(
                             _formatVolume(data.totalVolume, unitLabel),
-                            style: const TextStyle(fontSize: 12, color: AppColors.textTertiary),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textTertiary,
+                            ),
                           ),
                         ],
                       ),
                       loading: () => const SizedBox(height: 14),
-                      error: (_, __) => const SizedBox.shrink(),
+                      error: (_, _) => const SizedBox.shrink(),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.surfaceHighlight),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: AppColors.surfaceHighlight,
+              ),
             ],
           ),
         ),
@@ -726,16 +1010,30 @@ class _EmptyActivityState extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.55)),
       ),
       child: Column(
         children: [
-          Icon(Icons.history_rounded, size: 40, color: AppColors.textTertiary.withValues(alpha: 0.4)),
+          Icon(
+            Icons.history_rounded,
+            size: 40,
+            color: AppColors.textTertiary.withValues(alpha: 0.4),
+          ),
           const SizedBox(height: 12),
-          const Text('No workouts yet', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+          const Text(
+            'No workouts yet',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 4),
-          const Text('Complete a workout to see it here', style: TextStyle(fontSize: 13, color: AppColors.textTertiary)),
+          const Text(
+            'Complete a workout to see it here',
+            style: TextStyle(fontSize: 13, color: AppColors.textTertiary),
+          ),
         ],
       ),
     );

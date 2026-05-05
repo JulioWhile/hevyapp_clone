@@ -17,6 +17,7 @@ class RoutinesScreen extends ConsumerWidget {
     final routinesAsync = ref.watch(routinesProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
           // ─── Premium Header ───────────────────────
@@ -54,7 +55,7 @@ class RoutinesScreen extends ConsumerWidget {
                     height: 36,
                     decoration: BoxDecoration(
                       color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
                   ),
@@ -110,7 +111,7 @@ class RoutinesScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surfaceElevated,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         title: const Text('New Routine'),
         content: TextField(
           controller: controller,
@@ -121,7 +122,7 @@ class RoutinesScreen extends ConsumerWidget {
             filled: true,
             fillColor: AppColors.surfaceHighlight,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide.none,
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -136,7 +137,7 @@ class RoutinesScreen extends ConsumerWidget {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, controller.text),
             style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             child: const Text('Create'),
           ),
@@ -192,7 +193,7 @@ class _EmptyRoutinesState extends StatelessWidget {
                 icon: const Icon(Icons.add_rounded),
                 label: const Text('Create Routine', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
               ),
             ),
@@ -215,9 +216,13 @@ class _RoutineCard extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.surfaceElevated, AppColors.surface],
+        ),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.58)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.15),
@@ -227,7 +232,7 @@ class _RoutineCard extends ConsumerWidget {
         ],
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(8),
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -248,7 +253,7 @@ class _RoutineCard extends ConsumerWidget {
                     height: 44,
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(Icons.fitness_center_rounded, color: AppColors.primary, size: 22),
                   ),
@@ -287,7 +292,7 @@ class _RoutineCard extends ConsumerWidget {
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert_rounded, color: AppColors.textTertiary, size: 20),
                     color: AppColors.surfaceElevated,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     onSelected: (value) async {
                       if (value == 'edit') {
                         Navigator.of(context).push(
@@ -309,7 +314,7 @@ class _RoutineCard extends ConsumerWidget {
                           context: context,
                           builder: (ctx) => AlertDialog(
                             backgroundColor: AppColors.surfaceElevated,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             title: const Text('Delete Routine?'),
                             content: Text('Are you sure you want to delete "${routine.name}"? This cannot be undone.'),
                             actions: [
@@ -376,7 +381,7 @@ class _RoutineCard extends ConsumerWidget {
                     foregroundColor: AppColors.primary,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(8),
                       side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
                     ),
                   ),

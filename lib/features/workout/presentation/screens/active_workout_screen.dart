@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:hevy_app/app/theme/colors.dart';
 import 'package:hevy_app/core/constants/app_constants.dart';
@@ -21,10 +22,19 @@ class ActiveWorkoutScreen extends ConsumerWidget {
     final workout = ref.watch(activeWorkoutProvider);
 
     if (workout == null) {
-      return const Scaffold(
-        body: Center(child: Text('No active workout')),
-      );
+      return const Scaffold(body: Center(child: Text('No active workout')));
     }
+
+    final totalSets = workout.exercises.fold<int>(
+      0,
+      (sum, exercise) => sum + exercise.sets.length,
+    );
+    final completedSets = workout.exercises.fold<int>(
+      0,
+      (sum, exercise) =>
+          sum + exercise.sets.where((set) => set.isCompleted).length,
+    );
+    final progress = totalSets == 0 ? 0.0 : completedSets / totalSets;
 
     return PopScope(
       canPop: false,
@@ -57,7 +67,10 @@ class ActiveWorkoutScreen extends ConsumerWidget {
             children: [
               Text(
                 workout.name,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               Text(
                 _formatDuration(workout.elapsedSeconds),
@@ -82,13 +95,14 @@ class ActiveWorkoutScreen extends ConsumerWidget {
           children: [
             // ─── Hero Header ────────────────────────────
             Container(
-              height: 120,
+              height: 150,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AppColors.surfaceElevated,
+                    AppColors.primaryMuted.withValues(alpha: 0.38),
+                    AppColors.surfaceDim,
                     AppColors.background,
                   ],
                 ),
@@ -104,11 +118,43 @@ class ActiveWorkoutScreen extends ConsumerWidget {
                   children: [
                     Text(
                       workout.name,
-                      style: const TextStyle(
+                      style: GoogleFonts.lexend(
                         fontSize: 32,
                         fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        letterSpacing: 0,
                         height: 1.1,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        _HeaderMetric(
+                          label: 'Done',
+                          value: '$completedSets/$totalSets',
+                        ),
+                        const SizedBox(width: 10),
+                        _HeaderMetric(
+                          label: 'Moves',
+                          value: '${workout.exercises.length}',
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(999),
+                            child: LinearProgressIndicator(
+                              value: progress,
+                              minHeight: 8,
+                              backgroundColor: AppColors.surfaceHighlight,
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                AppColors.accent,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -123,7 +169,10 @@ class ActiveWorkoutScreen extends ConsumerWidget {
                 initialValue: workout.notes,
                 decoration: InputDecoration(
                   hintText: 'Add workout note...',
-                  hintStyle: const TextStyle(color: AppColors.textTertiary, fontSize: 14),
+                  hintStyle: const TextStyle(
+                    color: AppColors.textTertiary,
+                    fontSize: 14,
+                  ),
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
@@ -131,15 +180,20 @@ class ActiveWorkoutScreen extends ConsumerWidget {
                   contentPadding: EdgeInsets.zero,
                   isDense: true,
                 ),
-                style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
                 maxLines: null,
                 textInputAction: TextInputAction.done,
                 onChanged: (val) {
-                  ref.read(activeWorkoutProvider.notifier).updateWorkoutNotes(val);
+                  ref
+                      .read(activeWorkoutProvider.notifier)
+                      .updateWorkoutNotes(val);
                 },
               ),
             ),
-            
+
             const SizedBox(height: 8),
 
             // ─── Exercise list ──────────────────────────
@@ -207,10 +261,19 @@ class _StickyFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surfaceElevated,
-        border: Border(top: BorderSide(color: AppColors.border, width: 1)),
-        boxShadow: [
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [AppColors.surfaceElevated, AppColors.surfaceDim],
+        ),
+        border: Border(
+          top: BorderSide(
+            color: AppColors.primary.withValues(alpha: 0.16),
+            width: 1,
+          ),
+        ),
+        boxShadow: const [
           BoxShadow(
             color: Colors.black45,
             offset: Offset(0, -8),
@@ -218,14 +281,17 @@ class _StickyFooter extends StatelessWidget {
           ),
         ],
       ),
-      padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(context).padding.bottom + 16),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        16,
+        20,
+        MediaQuery.of(context).padding.bottom + 16,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // ─── Rest Timer Mini ──────────────────────
-          Expanded(
-            child: const RestTimerBar(),
-          ),
+          Expanded(child: const RestTimerBar()),
           const SizedBox(width: 16),
           // ─── Finish Button ────────────────────────
           ElevatedButton.icon(
@@ -234,12 +300,16 @@ class _StickyFooter extends StatelessWidget {
                 : () async {
                     final workoutId = workout.workoutId!;
                     ref.read(restTimerProvider.notifier).stop();
-                    await ref.read(activeWorkoutProvider.notifier).finishWorkout();
-                    
+                    await ref
+                        .read(activeWorkoutProvider.notifier)
+                        .finishWorkout();
+
                     // ignore: avoid_manual_providers_as_ref
                     final db = ref.read(databaseProvider);
-                    final newPRs = await db.settingsDao.checkAndRecordPRs(workoutId);
-                    
+                    final newPRs = await db.settingsDao.checkAndRecordPRs(
+                      workoutId,
+                    );
+
                     if (context.mounted) {
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
@@ -252,10 +322,57 @@ class _StickyFooter extends StatelessWidget {
                     }
                   },
             icon: const Icon(Icons.flag_rounded),
-            label: const Text('Finish Workout', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            label: const Text(
+              'Finish Workout',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeaderMetric extends StatelessWidget {
+  const _HeaderMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: AppColors.surface.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.65)),
+      ),
+      child: Row(
+        children: [
+          Text(
+            value,
+            style: GoogleFonts.lexend(
+              color: AppColors.textPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              height: 1,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label.toUpperCase(),
+            style: const TextStyle(
+              color: AppColors.textTertiary,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
             ),
           ),
         ],
@@ -324,10 +441,7 @@ class _AddExerciseButton extends StatelessWidget {
 
 /// Card for a single exercise during active workout — shows exercise name + set rows.
 class _ExerciseCard extends ConsumerWidget {
-  const _ExerciseCard({
-    required this.exerciseIndex,
-    required this.exercise,
-  });
+  const _ExerciseCard({required this.exerciseIndex, required this.exercise});
 
   final int exerciseIndex;
   final ActiveExercise exercise;
@@ -344,19 +458,21 @@ class _ExerciseCard extends ConsumerWidget {
     bool showSupersetLabel = false;
     if (isSuperset && workout != null) {
       final exercises = workout.exercises;
-      isFirstInGroup = exerciseIndex == 0 ||
+      isFirstInGroup =
+          exerciseIndex == 0 ||
           exercises[exerciseIndex - 1].supersetGroupId != groupId;
-      isLastInGroup = exerciseIndex == exercises.length - 1 ||
+      isLastInGroup =
+          exerciseIndex == exercises.length - 1 ||
           exercises[exerciseIndex + 1].supersetGroupId != groupId;
       showSupersetLabel = isFirstInGroup;
     }
 
     final borderRadius = isSuperset
         ? BorderRadius.vertical(
-            top: const Radius.circular(12),
-            bottom: isLastInGroup ? const Radius.circular(12) : Radius.zero,
+            top: const Radius.circular(8),
+            bottom: isLastInGroup ? const Radius.circular(8) : Radius.zero,
           )
-        : BorderRadius.circular(12);
+        : BorderRadius.circular(8);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,178 +498,248 @@ class _ExerciseCard extends ConsumerWidget {
           ),
         Container(
           margin: isSuperset
-              ? EdgeInsets.fromLTRB(12, isFirstInGroup ? 0 : 0, 12, isLastInGroup ? 4 : 0)
+              ? EdgeInsets.fromLTRB(
+                  12,
+                  isFirstInGroup ? 0 : 0,
+                  12,
+                  isLastInGroup ? 4 : 0,
+                )
               : const EdgeInsets.fromLTRB(12, 8, 12, 4),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppColors.surfaceElevated, AppColors.surface],
+            ),
             borderRadius: borderRadius,
-            border: Border.all(color: isSuperset ? AppColors.warning.withValues(alpha: 0.3) : AppColors.border, width: 0.5),
+            border: Border.all(
+              color: isSuperset
+                  ? AppColors.warning.withValues(alpha: 0.4)
+                  : AppColors.border.withValues(alpha: 0.62),
+              width: 0.5,
+            ),
           ),
           child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ─── Exercise header ──────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
-            child: Row(
-              children: [
-                if (exercise.gifUrl != null) ...[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: Image.asset(
-                      'assets/gifs/${exercise.gifUrl}',
-                      width: 36,
-                      height: 36,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                ],
-                Expanded(
-                  child: Text(
-                    exercise.exerciseName,
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                    ),
-                  ),
-                ),
-                _RestTimerChip(exerciseIndex: exerciseIndex, exercise: exercise),
-                const SizedBox(width: 4),
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_horiz_rounded, color: AppColors.textTertiary, size: 20),
-                  color: AppColors.surfaceElevated,
-                  onSelected: (value) {
-                    if (value == 'remove') {
-                      ref.read(activeWorkoutProvider.notifier).removeExercise(exerciseIndex);
-                    }
-                  },
-                  itemBuilder: (_) => [
-                    const PopupMenuItem(
-                      value: 'remove',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 18),
-                          SizedBox(width: 8),
-                          Text('Remove Exercise', style: TextStyle(color: AppColors.error)),
-                        ],
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ─── Exercise header ──────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
+                child: Row(
+                  children: [
+                    if (exercise.gifUrl != null) ...[
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: Image.asset(
+                          'assets/gifs/${exercise.gifUrl}',
+                          width: 36,
+                          height: 36,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                        ),
                       ),
+                      const SizedBox(width: 10),
+                    ],
+                    Expanded(
+                      child: Text(
+                        exercise.exerciseName,
+                        style: TextStyle(
+                          color: AppColors.primaryVariant,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    _RestTimerChip(
+                      exerciseIndex: exerciseIndex,
+                      exercise: exercise,
+                    ),
+                    const SizedBox(width: 4),
+                    PopupMenuButton<String>(
+                      icon: const Icon(
+                        Icons.more_horiz_rounded,
+                        color: AppColors.textTertiary,
+                        size: 20,
+                      ),
+                      color: AppColors.surfaceElevated,
+                      onSelected: (value) {
+                        if (value == 'remove') {
+                          ref
+                              .read(activeWorkoutProvider.notifier)
+                              .removeExercise(exerciseIndex);
+                        }
+                      },
+                      itemBuilder: (_) => [
+                        const PopupMenuItem(
+                          value: 'remove',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.delete_outline_rounded,
+                                color: AppColors.error,
+                                size: 18,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Remove Exercise',
+                                style: TextStyle(color: AppColors.error),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-
-          // ─── Exercise notes ───────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: TextFormField(
-              initialValue: exercise.notes,
-              decoration: InputDecoration(
-                hintText: 'Add exercise note...',
-                hintStyle: const TextStyle(color: AppColors.textTertiary, fontSize: 13),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                filled: false,
-                contentPadding: EdgeInsets.zero,
-                isDense: true,
               ),
-              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-              maxLines: null,
-              textInputAction: TextInputAction.done,
-              onChanged: (val) {
-                ref.read(activeWorkoutProvider.notifier).updateExerciseNotes(exerciseIndex, val);
-              },
-            ),
-          ),
 
-          // ─── Context Cards ────────────────────────────
-          _ContextCards(exerciseId: exercise.exerciseId),
-          const SizedBox(height: 8),
+              // ─── Exercise notes ───────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: TextFormField(
+                  initialValue: exercise.notes,
+                  decoration: InputDecoration(
+                    hintText: 'Add exercise note...',
+                    hintStyle: const TextStyle(
+                      color: AppColors.textTertiary,
+                      fontSize: 13,
+                    ),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    filled: false,
+                    contentPadding: EdgeInsets.zero,
+                    isDense: true,
+                  ),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                  ),
+                  maxLines: null,
+                  textInputAction: TextInputAction.done,
+                  onChanged: (val) {
+                    ref
+                        .read(activeWorkoutProvider.notifier)
+                        .updateExerciseNotes(exerciseIndex, val);
+                  },
+                ),
+              ),
 
-          // ─── Set header row ───────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                const SizedBox(width: 36, child: Text('SET', style: _headerStyle)),
-                const SizedBox(width: 8),
-                const Expanded(child: Text('PREVIOUS', style: _headerStyle)),
-                Expanded(child: Text(ref.watch(unitLabelUpperProvider), style: _headerStyle, textAlign: TextAlign.center)),
-                const SizedBox(width: 8),
-                const Expanded(child: Text('REPS', style: _headerStyle, textAlign: TextAlign.center)),
-                const SizedBox(width: 40),
-              ],
-            ),
-          ),
+              // ─── Context Cards ────────────────────────────
+              _ContextCards(exerciseId: exercise.exerciseId),
+              const SizedBox(height: 8),
 
-          const SizedBox(height: 4),
+              // ─── Set header row ───────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    const SizedBox(
+                      width: 36,
+                      child: Text('SET', style: _headerStyle),
+                    ),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text('PREVIOUS', style: _headerStyle),
+                    ),
+                    Expanded(
+                      child: Text(
+                        ref.watch(unitLabelUpperProvider),
+                        style: _headerStyle,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'REPS',
+                        style: _headerStyle,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(width: 40),
+                  ],
+                ),
+              ),
 
-          // ─── Set rows ─────────────────────────────────
-          ...(() {
-            int normal = 0;
-            return exercise.sets.map((s) {
-              if (s.setType == 'normal') return '${++normal}';
-              return switch (s.setType) {
-                'warmup' => 'W',
-                'dropset' => 'D',
-                'failure' => 'F',
-                _ => '${s.setNumber}',
-              };
-            }).toList();
-          })().asMap().entries.map((entry) {
-            final setIndex = entry.key;
-            final set = exercise.sets[setIndex];
-            return TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.0, end: 1.0),
-              duration: Duration(milliseconds: 250 + setIndex * 40),
-              curve: Curves.easeOut,
-              builder: (context, value, child) {
-                return Opacity(
-                  opacity: value,
-                  child: Transform.translate(
-                    offset: Offset(0, 8 * (1 - value)),
-                    child: child,
+              const SizedBox(height: 4),
+
+              // ─── Set rows ─────────────────────────────────
+              ...(() {
+                int normal = 0;
+                return exercise.sets.map((s) {
+                  if (s.setType == 'normal') return '${++normal}';
+                  return switch (s.setType) {
+                    'warmup' => 'W',
+                    'dropset' => 'D',
+                    'failure' => 'F',
+                    _ => '${s.setNumber}',
+                  };
+                }).toList();
+              })().asMap().entries.map((entry) {
+                final setIndex = entry.key;
+                final set = exercise.sets[setIndex];
+                return TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: Duration(milliseconds: 250 + setIndex * 40),
+                  curve: Curves.easeOut,
+                  builder: (context, value, child) {
+                    return Opacity(
+                      opacity: value,
+                      child: Transform.translate(
+                        offset: Offset(0, 8 * (1 - value)),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: SetRow(
+                    exerciseIndex: exerciseIndex,
+                    setIndex: setIndex,
+                    set: set,
+                    displayLabel: entry.value,
                   ),
                 );
-              },
-              child: SetRow(
-                exerciseIndex: exerciseIndex,
-                setIndex: setIndex,
-                set: set,
-                displayLabel: entry.value,
-              ),
-            );
-          }),
+              }),
 
-          // ─── Add set button ───────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-            child: SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: TextButton.icon(
-                onPressed: () {
-                  ref.read(activeWorkoutProvider.notifier).addSet(exerciseIndex);
-                },
-                icon: Icon(Icons.add_rounded, size: 20, color: AppColors.primary),
-                label: Text('Add Set', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary)),
-                style: TextButton.styleFrom(
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2)),
+              // ─── Add set button ───────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: TextButton.icon(
+                    onPressed: () {
+                      ref
+                          .read(activeWorkoutProvider.notifier)
+                          .addSet(exerciseIndex);
+                    },
+                    icon: Icon(
+                      Icons.add_rounded,
+                      size: 20,
+                      color: AppColors.primary,
+                    ),
+                    label: Text(
+                      'Add Set',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(
+                          color: AppColors.primary.withValues(alpha: 0.2),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
         ),
       ],
     );
@@ -591,13 +777,17 @@ class _RestTimerChip extends ConsumerWidget {
             Icon(
               Icons.timer_outlined,
               size: 14,
-              color: seconds != null ? AppColors.primary : AppColors.textTertiary,
+              color: seconds != null
+                  ? AppColors.primary
+                  : AppColors.textTertiary,
             ),
             const SizedBox(width: 4),
             Text(
               seconds != null ? '${seconds}s' : 'OFF',
               style: TextStyle(
-                color: seconds != null ? AppColors.primary : AppColors.textTertiary,
+                color: seconds != null
+                    ? AppColors.primary
+                    : AppColors.textTertiary,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -609,34 +799,54 @@ class _RestTimerChip extends ConsumerWidget {
   }
 }
 
-void _showRestTimerPicker(BuildContext context, WidgetRef ref, int exerciseIndex) {
+void _showRestTimerPicker(
+  BuildContext context,
+  WidgetRef ref,
+  int exerciseIndex,
+) {
   final workout = ref.read(activeWorkoutProvider);
   final current = workout?.exercises[exerciseIndex].restTimerSeconds;
 
   showModalBottomSheet(
     context: context,
+    isScrollControlled: true,
     backgroundColor: AppColors.surfaceElevated,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
     builder: (ctx) => SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(ctx).height * 0.75,
+        ),
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.symmetric(vertical: 12),
           children: [
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Text('Rest Timer', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+              child: Text(
+                'Rest Timer',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
             ),
             ListTile(
-              leading: const Icon(Icons.timer_off_outlined, color: AppColors.textTertiary),
+              leading: const Icon(
+                Icons.timer_off_outlined,
+                color: AppColors.textTertiary,
+              ),
               title: const Text('OFF'),
-              subtitle: const Text('No auto-start on set completion', style: TextStyle(fontSize: 12)),
-              trailing: current == null ? const Icon(Icons.check_rounded, color: AppColors.primary) : null,
+              subtitle: const Text(
+                'No auto-start on set completion',
+                style: TextStyle(fontSize: 12),
+              ),
+              trailing: current == null
+                  ? const Icon(Icons.check_rounded, color: AppColors.primary)
+                  : null,
               onTap: () {
-                ref.read(activeWorkoutProvider.notifier).updateExerciseRestTimer(exerciseIndex, null);
+                ref
+                    .read(activeWorkoutProvider.notifier)
+                    .updateExerciseRestTimer(exerciseIndex, null);
                 Navigator.pop(ctx);
               },
             ),
@@ -644,11 +854,18 @@ void _showRestTimerPicker(BuildContext context, WidgetRef ref, int exerciseIndex
             ...AppConstants.restTimerPresets.map((seconds) {
               final label = seconds >= 60 ? '${seconds ~/ 60}m' : '${seconds}s';
               return ListTile(
-                leading: Icon(Icons.timer_outlined, color: AppColors.primary.withValues(alpha: 0.6)),
+                leading: Icon(
+                  Icons.timer_outlined,
+                  color: AppColors.primary.withValues(alpha: 0.6),
+                ),
                 title: Text('$label (${seconds}s)'),
-                trailing: current == seconds ? const Icon(Icons.check_rounded, color: AppColors.primary) : null,
+                trailing: current == seconds
+                    ? const Icon(Icons.check_rounded, color: AppColors.primary)
+                    : null,
                 onTap: () {
-                  ref.read(activeWorkoutProvider.notifier).updateExerciseRestTimer(exerciseIndex, seconds);
+                  ref
+                      .read(activeWorkoutProvider.notifier)
+                      .updateExerciseRestTimer(exerciseIndex, seconds);
                   Navigator.pop(ctx);
                 },
               );
@@ -660,9 +877,10 @@ void _showRestTimerPicker(BuildContext context, WidgetRef ref, int exerciseIndex
   );
 }
 
-final _previousPerformanceProvider = FutureProvider.family<List<WorkoutSet>, int>((ref, exerciseId) {
-  return ref.watch(workoutDaoProvider).getPreviousPerformance(exerciseId);
-});
+final _previousPerformanceProvider =
+    FutureProvider.family<List<WorkoutSet>, int>((ref, exerciseId) {
+      return ref.watch(workoutDaoProvider).getPreviousPerformance(exerciseId);
+    });
 
 class _ContextCards extends ConsumerWidget {
   const _ContextCards({required this.exerciseId});
@@ -676,10 +894,12 @@ class _ContextCards extends ConsumerWidget {
     return asyncData.when(
       data: (sets) {
         if (sets.isEmpty) return const SizedBox.shrink();
-        
+
         // Find best set (max weight) from previous
-        final bestSet = sets.reduce((curr, next) => curr.weight > next.weight ? curr : next);
-        
+        final bestSet = sets.reduce(
+          (curr, next) => curr.weight > next.weight ? curr : next,
+        );
+
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -705,27 +925,49 @@ class _ContextCards extends ConsumerWidget {
         );
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 
-  Widget _buildCard({required IconData icon, required String title, required String value, required String subtitle, required bool isPrimary}) {
+  Widget _buildCard({
+    required IconData icon,
+    required String title,
+    required String value,
+    required String subtitle,
+    required bool isPrimary,
+  }) {
     return Container(
       width: 160,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isPrimary ? AppColors.primary.withValues(alpha: 0.3) : AppColors.border),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isPrimary
+              ? AppColors.primary.withValues(alpha: 0.3)
+              : AppColors.border,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 14, color: isPrimary ? AppColors.primary : AppColors.textTertiary),
+              Icon(
+                icon,
+                size: 14,
+                color: isPrimary ? AppColors.primary : AppColors.textTertiary,
+              ),
               const SizedBox(width: 4),
-              Text(title, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: isPrimary ? AppColors.primary : AppColors.textTertiary, letterSpacing: 0.5)),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: isPrimary ? AppColors.primary : AppColors.textTertiary,
+                  letterSpacing: 0.5,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 4),
@@ -733,9 +975,22 @@ class _ContextCards extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
               const SizedBox(width: 4),
-              Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
+              ),
             ],
           ),
         ],

@@ -13,9 +13,8 @@ class SettingsScreen extends ConsumerWidget {
     final settingsAsync = ref.watch(userSettingsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(title: const Text('Settings')),
       body: settingsAsync.when(
         data: (settings) => ListView(
           padding: const EdgeInsets.all(16),
@@ -25,17 +24,29 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border, width: 0.5),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.surfaceElevated, AppColors.surface],
+                ),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AppColors.border.withValues(alpha: 0.58),
+                  width: 0.5,
+                ),
               ),
               child: Column(
                 children: [
                   ListTile(
                     title: const Text('Unit System'),
                     subtitle: Text(
-                      settings.unitSystem == 'metric' ? 'Kilograms (kg)' : 'Pounds (lbs)',
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                      settings.unitSystem == 'metric'
+                          ? 'Kilograms (kg)'
+                          : 'Pounds (lbs)',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                      ),
                     ),
                     trailing: Container(
                       decoration: BoxDecoration(
@@ -55,8 +66,14 @@ class SettingsScreen extends ConsumerWidget {
                         selectedColor: Colors.white,
                         fillColor: AppColors.primary,
                         color: AppColors.textSecondary,
-                        constraints: const BoxConstraints(minWidth: 50, minHeight: 32),
-                        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        constraints: const BoxConstraints(
+                          minWidth: 50,
+                          minHeight: 32,
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                         children: const [Text('kg'), Text('lbs')],
                       ),
                     ),
@@ -66,10 +83,20 @@ class SettingsScreen extends ConsumerWidget {
                     title: const Text('Default Rest Timer'),
                     subtitle: Text(
                       '${settings.defaultRestTimerSeconds}s',
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                      ),
                     ),
-                    trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary),
-                    onTap: () => _showRestTimerPicker(context, ref, settings.defaultRestTimerSeconds),
+                    trailing: const Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppColors.textTertiary,
+                    ),
+                    onTap: () => _showRestTimerPicker(
+                      context,
+                      ref,
+                      settings.defaultRestTimerSeconds,
+                    ),
                   ),
                 ],
               ),
@@ -82,15 +109,25 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border, width: 0.5),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.surfaceElevated, AppColors.surface],
+                ),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AppColors.border.withValues(alpha: 0.58),
+                  width: 0.5,
+                ),
               ),
               child: const Column(
                 children: [
                   ListTile(
                     title: Text('Version'),
-                    trailing: Text('0.1.0', style: TextStyle(color: AppColors.textSecondary)),
+                    trailing: Text(
+                      '0.1.0',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
                   ),
                 ],
               ),
@@ -103,18 +140,26 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showRestTimerPicker(BuildContext context, WidgetRef ref, int currentValue) {
+  void _showRestTimerPicker(
+    BuildContext context,
+    WidgetRef ref,
+    int currentValue,
+  ) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: AppColors.surfaceElevated,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * 0.75,
+          ),
+          child: ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.symmetric(vertical: 8),
             children: [
               const Padding(
                 padding: EdgeInsets.all(16),
@@ -131,7 +176,10 @@ class SettingsScreen extends ConsumerWidget {
                 return ListTile(
                   title: Text(label),
                   trailing: isSelected
-                      ? const Icon(Icons.check_rounded, color: AppColors.primary)
+                      ? const Icon(
+                          Icons.check_rounded,
+                          color: AppColors.primary,
+                        )
                       : null,
                   onTap: () {
                     ref.read(settingsDaoProvider).updateRestTimer(seconds);

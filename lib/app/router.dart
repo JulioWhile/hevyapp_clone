@@ -33,21 +33,41 @@ final appRouter = GoRouter(
       },
       branches: [
         // 0 — Home: greeting, quick start, my routines, recent activity
-        StatefulShellBranch(routes: [
-          GoRoute(path: AppRoutes.home, builder: (c, s) => const HomeScreen()),
-        ]),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.home,
+              builder: (c, s) => const HomeScreen(),
+            ),
+          ],
+        ),
         // 1 — Progress / Analytics
-        StatefulShellBranch(routes: [
-          GoRoute(path: AppRoutes.analytics, builder: (c, s) => const AnalyticsScreen()),
-        ]),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.analytics,
+              builder: (c, s) => const AnalyticsScreen(),
+            ),
+          ],
+        ),
         // 2 — History
-        StatefulShellBranch(routes: [
-          GoRoute(path: AppRoutes.history, builder: (c, s) => const HistoryScreen()),
-        ]),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.history,
+              builder: (c, s) => const HistoryScreen(),
+            ),
+          ],
+        ),
         // 3 — Profile
-        StatefulShellBranch(routes: [
-          GoRoute(path: AppRoutes.profile, builder: (c, s) => const ProfileScreen()),
-        ]),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.profile,
+              builder: (c, s) => const ProfileScreen(),
+            ),
+          ],
+        ),
       ],
     ),
   ],
@@ -83,7 +103,7 @@ class _AppShell extends ConsumerWidget {
   Future<void> _startWorkout(BuildContext context, WidgetRef ref) async {
     HapticFeedback.mediumImpact();
     final active = ref.read(activeWorkoutProvider);
-    if (active != null) {
+    if (active != null && active.isActive) {
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => const ActiveWorkoutScreen(),
@@ -118,10 +138,17 @@ class _GlassNavBar extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF09090B).withValues(alpha: 0.88),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                AppColors.surface.withValues(alpha: 0.9),
+                AppColors.background.withValues(alpha: 0.94),
+              ],
+            ),
             border: Border(
               top: BorderSide(
-                color: Colors.white.withValues(alpha: 0.06),
+                color: AppColors.primary.withValues(alpha: 0.16),
                 width: 0.5,
               ),
             ),
@@ -193,8 +220,13 @@ class _CenterFab extends StatelessWidget {
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            color: AppColors.primary,
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppColors.primaryVariant, AppColors.primary],
+            ),
             shape: BoxShape.circle,
+            border: Border.all(color: Colors.white24, width: 1),
             boxShadow: [
               BoxShadow(
                 color: AppColors.primary.withValues(alpha: 0.45),
@@ -232,7 +264,7 @@ class _NavItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-        child: SizedBox(
+      child: SizedBox(
         width: 64,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -244,9 +276,14 @@ class _NavItem extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? AppColors.primary.withValues(alpha: 0.15)
+                    ? AppColors.primary.withValues(alpha: 0.18)
                     : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isSelected
+                      ? AppColors.primary.withValues(alpha: 0.28)
+                      : Colors.transparent,
+                ),
               ),
               child: Icon(
                 isSelected ? selectedIcon : icon,

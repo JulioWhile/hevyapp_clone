@@ -63,7 +63,9 @@ class ActiveSet {
       isCompleted: isCompleted ?? this.isCompleted,
       rpe: rpe != null ? rpe() : this.rpe,
       rir: rir != null ? rir() : this.rir,
-      previousWeight: previousWeight != null ? previousWeight() : this.previousWeight,
+      previousWeight: previousWeight != null
+          ? previousWeight()
+          : this.previousWeight,
       previousReps: previousReps != null ? previousReps() : this.previousReps,
     );
   }
@@ -113,10 +115,14 @@ class ActiveExercise {
       muscleGroup: muscleGroup,
       equipment: equipment,
       orderIndex: orderIndex ?? this.orderIndex,
-      supersetGroupId: supersetGroupId != null ? supersetGroupId() : this.supersetGroupId,
+      supersetGroupId: supersetGroupId != null
+          ? supersetGroupId()
+          : this.supersetGroupId,
       sets: sets ?? this.sets,
       notes: notes != null ? notes() : this.notes,
-      restTimerSeconds: restTimerSeconds != null ? restTimerSeconds() : this.restTimerSeconds,
+      restTimerSeconds: restTimerSeconds != null
+          ? restTimerSeconds()
+          : this.restTimerSeconds,
       gifUrl: gifUrl != null ? gifUrl() : this.gifUrl,
     );
   }
@@ -195,7 +201,10 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState?> {
 
   /// Start a new workout.
   Future<void> startWorkout({String name = 'Workout', int? templateId}) async {
-    final workoutId = await _workoutDao.createWorkout(name: name, templateId: templateId);
+    final workoutId = await _workoutDao.createWorkout(
+      name: name,
+      templateId: templateId,
+    );
 
     state = ActiveWorkoutState(
       workoutId: workoutId,
@@ -248,15 +257,15 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState?> {
         ActiveSet(
           dbId: setId,
           setNumber: 1,
-          previousWeight: previousSets.isNotEmpty ? previousSets[0].weight : null,
+          previousWeight: previousSets.isNotEmpty
+              ? previousSets[0].weight
+              : null,
           previousReps: previousSets.isNotEmpty ? previousSets[0].reps : null,
         ),
       ],
     );
 
-    state = state!.copyWith(
-      exercises: [...state!.exercises, activeExercise],
-    );
+    state = state!.copyWith(exercises: [...state!.exercises, activeExercise]);
   }
 
   /// Add a new set to an exercise (duplicates last set's weight/reps).
@@ -268,8 +277,12 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState?> {
     final newSetNumber = exercise.sets.length + 1;
 
     // Get previous performance for this set number.
-    final previousSets = await _workoutDao.getPreviousPerformance(exercise.exerciseId);
-    final prevSet = previousSets.length >= newSetNumber ? previousSets[newSetNumber - 1] : null;
+    final previousSets = await _workoutDao.getPreviousPerformance(
+      exercise.exerciseId,
+    );
+    final prevSet = previousSets.length >= newSetNumber
+        ? previousSets[newSetNumber - 1]
+        : null;
 
     final setId = await _workoutDao.addSet(
       workoutExerciseId: exercise.workoutExerciseId!,
@@ -292,7 +305,9 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState?> {
   }
 
   /// Update a set's values and persist to DB.
-  Future<void> updateSet(int exerciseIndex, int setIndex, {
+  Future<void> updateSet(
+    int exerciseIndex,
+    int setIndex, {
     double? weight,
     int? reps,
     String? setType,
@@ -346,13 +361,13 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState?> {
   /// Update the workout notes.
   Future<void> updateWorkoutNotes(String notes) async {
     if (state == null) return;
-    
+
     final updatedNotes = notes.trim().isEmpty ? null : notes.trim();
-    
+
     if (state!.workoutId != null) {
       await _workoutDao.updateWorkoutNotes(state!.workoutId!, updatedNotes);
     }
-    
+
     state = state!.copyWith(notes: () => updatedNotes);
   }
 
@@ -364,17 +379,26 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState?> {
     final updatedNotes = notes.trim().isEmpty ? null : notes.trim();
 
     if (exercise.workoutExerciseId != null) {
-      await _workoutDao.updateExerciseNotes(exercise.workoutExerciseId!, updatedNotes);
+      await _workoutDao.updateExerciseNotes(
+        exercise.workoutExerciseId!,
+        updatedNotes,
+      );
     }
 
-    _updateExercise(exerciseIndex, exercise.copyWith(notes: () => updatedNotes));
+    _updateExercise(
+      exerciseIndex,
+      exercise.copyWith(notes: () => updatedNotes),
+    );
   }
 
   /// Set the rest timer duration for an exercise (null = OFF).
   void updateExerciseRestTimer(int exerciseIndex, int? seconds) {
     if (state == null) return;
     final exercise = state!.exercises[exerciseIndex];
-    _updateExercise(exerciseIndex, exercise.copyWith(restTimerSeconds: () => seconds));
+    _updateExercise(
+      exerciseIndex,
+      exercise.copyWith(restTimerSeconds: () => seconds),
+    );
   }
 
   /// Delete a set.
@@ -406,7 +430,8 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState?> {
       await _workoutDao.removeExerciseFromWorkout(exercise.workoutExerciseId!);
     }
 
-    final updatedExercises = List<ActiveExercise>.from(state!.exercises)..removeAt(exerciseIndex);
+    final updatedExercises = List<ActiveExercise>.from(state!.exercises)
+      ..removeAt(exerciseIndex);
     state = state!.copyWith(exercises: updatedExercises);
   }
 
@@ -415,8 +440,8 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState?> {
     if (state == null || state!.workoutId == null) return;
 
     await _workoutDao.finishWorkout(state!.workoutId!);
-    state = state!.copyWith(isActive: false);
     _timer?.cancel();
+    state = null;
   }
 
   /// Discard the workout.
@@ -450,9 +475,9 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState?> {
 /// Provider for the active workout.
 final activeWorkoutProvider =
     StateNotifierProvider<ActiveWorkoutNotifier, ActiveWorkoutState?>((ref) {
-  final dao = ref.watch(workoutDaoProvider);
-  return ActiveWorkoutNotifier(dao);
-});
+      final dao = ref.watch(workoutDaoProvider);
+      return ActiveWorkoutNotifier(dao);
+    });
 
 // ─── Rest Timer ────────────────────────────────────────────
 
@@ -468,7 +493,11 @@ class RestTimerState {
     this.isRunning = false,
   });
 
-  RestTimerState copyWith({int? totalSeconds, int? remainingSeconds, bool? isRunning}) {
+  RestTimerState copyWith({
+    int? totalSeconds,
+    int? remainingSeconds,
+    bool? isRunning,
+  }) {
     return RestTimerState(
       totalSeconds: totalSeconds ?? this.totalSeconds,
       remainingSeconds: remainingSeconds ?? this.remainingSeconds,
@@ -532,5 +561,5 @@ class RestTimerNotifier extends StateNotifier<RestTimerState> {
 
 final restTimerProvider =
     StateNotifierProvider<RestTimerNotifier, RestTimerState>((ref) {
-  return RestTimerNotifier();
-});
+      return RestTimerNotifier();
+    });

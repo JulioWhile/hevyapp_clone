@@ -99,7 +99,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                           color: Colors.transparent,
                           elevation: 8,
                           shadowColor: Colors.black54,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(8),
                           child: child,
                         ),
                         child: child,
@@ -144,7 +144,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                     icon: const Icon(Icons.add_rounded, size: 22),
                     label: const Text('Add Exercise', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       elevation: 4,
                       shadowColor: AppColors.primary.withValues(alpha: 0.3),
                     ),
@@ -169,7 +169,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surfaceElevated,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         title: const Text('Rename Routine'),
         content: TextField(
           controller: controller,
@@ -178,7 +178,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
             hintText: 'Routine name',
             filled: true,
             fillColor: AppColors.surfaceHighlight,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
           onSubmitted: (value) => Navigator.pop(context, value),
@@ -187,7 +187,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+            style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
             child: const Text('Save'),
           ),
         ],
@@ -329,9 +329,13 @@ class _TemplateExerciseCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.surfaceElevated, AppColors.surface],
+        ),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.58)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.15),
@@ -544,7 +548,7 @@ class _ExercisePickerForRoutineState extends ConsumerState<_ExercisePickerForRou
                 prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textTertiary),
                 filled: true,
                 fillColor: AppColors.surfaceHighlight,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
               onChanged: (value) {
@@ -566,7 +570,7 @@ class _ExercisePickerForRoutineState extends ConsumerState<_ExercisePickerForRou
                       width: 40, height: 40, alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: isSelected ? AppColors.primary.withValues(alpha: 0.2) : AppColors.surfaceHighlight,
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: isSelected
                           ? const Icon(Icons.check_rounded, color: AppColors.primary, size: 22)
@@ -574,7 +578,7 @@ class _ExercisePickerForRoutineState extends ConsumerState<_ExercisePickerForRou
                     ),
                     title: Text(ex.name, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: isSelected ? AppColors.primary : AppColors.textPrimary)),
                     subtitle: Text('${_cap(ex.primaryMuscleGroup)} · ${_cap(ex.equipment)}', style: const TextStyle(fontSize: 12, color: AppColors.textTertiary)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     onTap: () {
                       HapticFeedback.selectionClick();
                       setState(() => isSelected ? _selectedIds.remove(ex.id) : _selectedIds.add(ex.id));
@@ -618,7 +622,7 @@ class _ExercisePickerForRoutineState extends ConsumerState<_ExercisePickerForRou
                         icon: const Icon(Icons.add_rounded),
                         label: Text('Add ${_selectedIds.length} Exercise${_selectedIds.length > 1 ? 's' : ''}${_isSuperset ? ' as Superset' : ''}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                         style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
                       ),
                     ),

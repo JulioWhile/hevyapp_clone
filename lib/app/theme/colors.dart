@@ -1,40 +1,41 @@
 import 'package:flutter/material.dart';
 
-/// Premium dark theme color palette (Midnight Slate + Neon Accents)
+/// High-performance athletic dark palette.
 abstract final class AppColors {
   // ─── Backgrounds ─────────────────────────────────────────
-  static const background = Color(0xFF09090B); // Zinc 950
-  static const surface = Color(0xFF18181B); // Zinc 900
-  static const surfaceElevated = Color(0xFF27272A); // Zinc 800
-  static const surfaceHighlight = Color(0xFF3F3F46); // Zinc 700
+  static const background = Color(0xFF101113);
+  static const surface = Color(0xFF171819);
+  static const surfaceDim = Color(0xFF121314);
+  static const surfaceElevated = Color(0xFF202225);
+  static const surfaceHighlight = Color(0xFF30343A);
 
-  // ─── Primary (Vibrant Indigo) ────────────────────────────
-  static const primary = Color(0xFF6366F1); // Indigo 500
-  static const primaryVariant = Color(0xFF4F46E5); // Indigo 600
-  static const primaryMuted = Color(0xFF3730A3); // Indigo 800
+  // ─── Primary (Electric Blue) ─────────────────────────────
+  static const primary = Color(0xFF4B8EFF);
+  static const primaryVariant = Color(0xFFADC6FF);
+  static const primaryMuted = Color(0xFF153865);
 
-  // ─── Accent (Neon Cyan/Emerald for success) ──────────────
-  static const accent = Color(0xFF10B981); // Emerald 500
-  static const accentMuted = Color(0xFF065F46); // Emerald 800
+  // ─── Accent (Goal Green) ─────────────────────────────────
+  static const accent = Color(0xFF53E16F);
+  static const accentMuted = Color(0xFF0A4E22);
 
   // ─── Semantics ───────────────────────────────────────────
-  static const warning = Color(0xFFF59E0B);
-  static const warningMuted = Color(0xFF92400E);
-  static const error = Color(0xFFEF4444);
-  static const errorMuted = Color(0xFF991B1B);
+  static const warning = Color(0xFFFFB874);
+  static const warningMuted = Color(0xFF6A3B00);
+  static const error = Color(0xFFFF6B61);
+  static const errorMuted = Color(0xFF6D1614);
 
   // ─── Text ────────────────────────────────────────────────
-  static const textPrimary = Color(0xFFFAFAFA); // Zinc 50
-  static const textSecondary = Color(0xFFA1A1AA); // Zinc 400
-  static const textTertiary = Color(0xFF71717A); // Zinc 500
+  static const textPrimary = Color(0xFFEDEBE8);
+  static const textSecondary = Color(0xFFC1C6D7);
+  static const textTertiary = Color(0xFF858B99);
 
   // ─── Borders & Dividers ──────────────────────────────────
-  static const border = Color(0xFF27272A); // Zinc 800
-  static const divider = Color(0xFF27272A);
+  static const border = Color(0xFF383D46);
+  static const divider = Color(0xFF2B3038);
 
   // ─── Set type badge colors ───────────────────────────────
   static const warmup = Color(0xFFF59E0B);
   static const dropset = Color(0xFFD946EF); // Fuchsia 500
-  static const failure = Color(0xFFEF4444);
+  static const failure = Color(0xFFFF6B61);
 }
 

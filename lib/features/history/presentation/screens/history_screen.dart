@@ -18,9 +18,22 @@ class HistoryScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        bottom: false,
-        child: historyAsync.when(
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.warningMuted.withValues(alpha: 0.22),
+              AppColors.background,
+              AppColors.background,
+            ],
+            stops: const [0, 0.24, 1],
+          ),
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: historyAsync.when(
           data: (workouts) {
             if (workouts.isEmpty) {
               return Padding(
@@ -28,7 +41,7 @@ class HistoryScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('History', style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5)),
+                    Text('History', style: GoogleFonts.lexend(fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: 0)),
                     Expanded(
                       child: Center(
                         child: Column(
@@ -58,7 +71,7 @@ class HistoryScreen extends ConsumerWidget {
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
               children: [
-                Text('History', style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5)),
+                Text('History', style: GoogleFonts.lexend(fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: 0)),
                 const SizedBox(height: 20),
                 ...grouped.entries.expand((entry) => [
                   Padding(
@@ -82,6 +95,7 @@ class HistoryScreen extends ConsumerWidget {
           error: (e, _) => Center(child: Text('Error: $e')),
         ),
       ),
+      ),
     );
   }
 }
@@ -101,12 +115,16 @@ class _WorkoutHistoryItem extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.35)),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.surfaceElevated, AppColors.surface],
+        ),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.58)),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => WorkoutDetailScreen(workoutId: workout.id)),
         ),
@@ -119,14 +137,14 @@ class _WorkoutHistoryItem extends ConsumerWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceElevated,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.26)),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(day, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: AppColors.textPrimary, height: 1)),
+                    Text(day, style: GoogleFonts.lexend(fontWeight: FontWeight.w700, fontSize: 16, color: AppColors.textPrimary, height: 1)),
                     Text(month.toUpperCase(), style: const TextStyle(fontSize: 10, color: AppColors.textTertiary, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
                   ],
                 ),

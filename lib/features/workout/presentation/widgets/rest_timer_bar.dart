@@ -59,7 +59,7 @@ class _RestTimerBarState extends ConsumerState<RestTimerBar> with SingleTickerPr
             color: isUrgent
                 ? AppColors.error.withValues(alpha: pulseOpacity?.value ?? 0.3)
                 : AppColors.warningMuted.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: isUrgent
                   ? AppColors.error.withValues(alpha: 0.5)

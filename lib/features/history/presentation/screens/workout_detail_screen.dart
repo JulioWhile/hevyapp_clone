@@ -12,7 +12,7 @@ import 'package:hevy_app/app/theme/colors.dart';
 import 'package:hevy_app/core/database/app_database.dart';
 import 'package:hevy_app/core/database/daos/workout_dao.dart';
 import 'package:hevy_app/core/providers/unit_providers.dart';
-import 'package:hevy_app/features/exercises/presentation/providers/exercise_providers.dart';
+import 'package:hevy_app/features/history/presentation/widgets/muscle_split_card.dart';
 import 'package:hevy_app/features/workout/presentation/providers/workout_providers.dart';
 import 'package:hevy_app/features/workout/presentation/widgets/exercise_picker_sheet.dart';
 import '../providers/history_providers.dart';
@@ -23,7 +23,8 @@ class WorkoutDetailScreen extends ConsumerStatefulWidget {
   final int workoutId;
 
   @override
-  ConsumerState<WorkoutDetailScreen> createState() => _WorkoutDetailScreenState();
+  ConsumerState<WorkoutDetailScreen> createState() =>
+      _WorkoutDetailScreenState();
 }
 
 class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
@@ -56,7 +57,9 @@ class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
                 backgroundColor: AppColors.surface,
                 actions: [
                   IconButton(
-                    icon: Icon(_isEditing ? Icons.check_rounded : Icons.edit_rounded),
+                    icon: Icon(
+                      _isEditing ? Icons.check_rounded : Icons.edit_rounded,
+                    ),
                     tooltip: _isEditing ? 'Done' : 'Edit',
                     onPressed: () {
                       setState(() => _isEditing = !_isEditing);
@@ -66,31 +69,51 @@ class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
                       }
                     },
                   ),
-                  if (!_isEditing)
-                    IconButton(
-                      icon: const Icon(Icons.share_rounded),
-                      tooltip: 'Export',
-                      onPressed: () => _exportWorkout(ref, widget.workoutId),
-                    ),
+                  _isEditing
+                      ? const SizedBox.shrink()
+                      : IconButton(
+                          icon: const Icon(Icons.share_rounded),
+                          tooltip: 'Export',
+                          onPressed: () =>
+                              _exportWorkout(ref, widget.workoutId),
+                        ),
                 ],
                 flexibleSpace: FlexibleSpaceBar(
-                  titlePadding: const EdgeInsets.only(left: 56, bottom: 16, right: 16),
+                  titlePadding: const EdgeInsets.only(
+                    left: 56,
+                    bottom: 16,
+                    right: 16,
+                  ),
                   title: _isEditing
                       ? TextField(
                           controller: TextEditingController(text: w.name),
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
                           textCapitalization: TextCapitalization.words,
-                          decoration: const InputDecoration(border: InputBorder.none, isDense: true),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            isDense: true,
+                          ),
                           onSubmitted: (val) {
                             if (val.trim().isNotEmpty) {
-                              ref.read(workoutDaoProvider).updateWorkoutName(w.id, val.trim());
-                              ref.invalidate(workoutDetailProvider(widget.workoutId));
+                              ref
+                                  .read(workoutDaoProvider)
+                                  .updateWorkoutName(w.id, val.trim());
+                              ref.invalidate(
+                                workoutDetailProvider(widget.workoutId),
+                              );
+                              ref.invalidate(workoutHistoryProvider);
                             }
                           },
                         )
                       : Text(
                           w.name,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                   background: Container(
@@ -110,9 +133,21 @@ class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(dateStr, style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+                          Text(
+                            dateStr,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                           const SizedBox(height: 2),
-                          Text(timeStr, style: TextStyle(fontSize: 13, color: AppColors.textTertiary)),
+                          Text(
+                            timeStr,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textTertiary,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -128,13 +163,56 @@ class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
                     children: [
                       Row(
                         children: [
-                          Expanded(child: _MetricTile(icon: Icons.timer_outlined, value: '${durationMin}m', label: 'Duration')),
+                          Expanded(
+                            child: _isEditing
+                                ? _EditableDurationTile(
+                                    valueMinutes: durationMin,
+                                    onSubmitted: (value) async {
+                                      final minutes = int.tryParse(
+                                        value.trim(),
+                                      );
+                                      if (minutes == null || minutes <= 0) {
+                                        return;
+                                      }
+                                      await ref
+                                          .read(workoutDaoProvider)
+                                          .updateWorkoutDuration(
+                                            w.id,
+                                            minutes * 60,
+                                          );
+                                      ref.invalidate(
+                                        workoutDetailProvider(widget.workoutId),
+                                      );
+                                      ref.invalidate(workoutHistoryProvider);
+                                    },
+                                  )
+                                : _MetricTile(
+                                    icon: Icons.timer_outlined,
+                                    value: '${durationMin}m',
+                                    label: 'Duration',
+                                  ),
+                          ),
                           const SizedBox(width: 12),
-                          Expanded(child: _MetricTile(icon: Icons.fitness_center_rounded, value: '$volumeFormatted $unitLabel', label: 'Volume')),
+                          Expanded(
+                            child: _MetricTile(
+                              icon: Icons.fitness_center_rounded,
+                              value: '$volumeFormatted $unitLabel',
+                              label: 'Volume',
+                            ),
+                          ),
                           const SizedBox(width: 12),
-                          Expanded(child: _MetricTile(icon: Icons.repeat_rounded, value: '${data.totalSets}', label: 'Sets')),
+                          Expanded(
+                            child: _MetricTile(
+                              icon: Icons.repeat_rounded,
+                              value: '${data.totalSets}',
+                              label: 'Sets',
+                            ),
+                          ),
                         ],
                       ),
+
+                      const SizedBox(height: 20),
+                      MuscleSplitCard(entries: data.muscleSplit),
 
                       // Notes — editable in both modes
                       const SizedBox(height: 20),
@@ -143,22 +221,35 @@ class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
                         readOnly: !_isEditing,
                         decoration: InputDecoration(
                           hintText: 'Workout notes...',
-                          hintStyle: const TextStyle(color: AppColors.textTertiary, fontSize: 14),
-                          border: _isEditing ? const OutlineInputBorder() : InputBorder.none,
+                          hintStyle: const TextStyle(
+                            color: AppColors.textTertiary,
+                            fontSize: 14,
+                          ),
+                          border: _isEditing
+                              ? const OutlineInputBorder()
+                              : InputBorder.none,
                           enabledBorder: _isEditing ? null : InputBorder.none,
                           focusedBorder: _isEditing ? null : InputBorder.none,
                           filled: _isEditing,
                           fillColor: AppColors.surfaceElevated,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
                           isDense: true,
                         ),
-                        style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                        ),
                         onChanged: _isEditing
                             ? (val) {
-                                ref.read(workoutDaoProvider).updateWorkoutNotes(
-                                  w.id,
-                                  val.trim().isEmpty ? null : val.trim(),
-                                );
+                                ref
+                                    .read(workoutDaoProvider)
+                                    .updateWorkoutNotes(
+                                      w.id,
+                                      val.trim().isEmpty ? null : val.trim(),
+                                    );
                               }
                             : null,
                       ),
@@ -176,7 +267,9 @@ class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
                           unitLabel: unitLabelUpper,
                           isEditing: _isEditing,
                           workoutId: widget.workoutId,
-                          onChanged: () => ref.invalidate(workoutDetailProvider(widget.workoutId)),
+                          onChanged: () => ref.invalidate(
+                            workoutDetailProvider(widget.workoutId),
+                          ),
                         );
                       }),
 
@@ -208,7 +301,7 @@ class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
   }
 
   Future<void> _addExerciseToWorkout() async {
-    final picked = await showModalBottomSheet<List<int>>(
+    await showModalBottomSheet<List<int>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -247,9 +340,16 @@ class _EditableExerciseCard extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border, width: 0.5),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.surfaceElevated, AppColors.surface],
+        ),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: AppColors.border.withValues(alpha: 0.58),
+          width: 0.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,19 +366,27 @@ class _EditableExerciseCard extends ConsumerWidget {
                       width: 36,
                       height: 36,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                      errorBuilder: (_, _, _) => const SizedBox.shrink(),
                     ),
                   ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     exercise.exercise.name,
-                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 15),
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                    ),
                   ),
                 ),
                 if (isEditing)
                   IconButton(
-                    icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 20),
+                    icon: const Icon(
+                      Icons.delete_outline_rounded,
+                      color: AppColors.error,
+                      size: 20,
+                    ),
                     onPressed: () {
                       dao.removeExerciseFromWorkout(we.id);
                       onChanged();
@@ -292,9 +400,24 @@ class _EditableExerciseCard extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
             child: Row(
               children: [
-                const SizedBox(width: 40, child: Text('SET', style: _headerStyle)),
-                Expanded(child: Text(unitLabel, style: _headerStyle, textAlign: TextAlign.center)),
-                const Expanded(child: Text('REPS', style: _headerStyle, textAlign: TextAlign.center)),
+                const SizedBox(
+                  width: 40,
+                  child: Text('SET', style: _headerStyle),
+                ),
+                Expanded(
+                  child: Text(
+                    unitLabel,
+                    style: _headerStyle,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const Expanded(
+                  child: Text(
+                    'REPS',
+                    style: _headerStyle,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
                 if (isEditing) const SizedBox(width: 40),
               ],
             ),
@@ -368,7 +491,9 @@ class _EditableSetRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
-          color: set.isCompleted ? AppColors.accent.withValues(alpha: 0.06) : Colors.transparent,
+          color: set.isCompleted
+              ? AppColors.accent.withValues(alpha: 0.06)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -384,13 +509,29 @@ class _EditableSetRow extends StatelessWidget {
                     color: _typeColor(set.setType).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text(typeLabel, style: TextStyle(color: _typeColor(set.setType), fontWeight: FontWeight.w700, fontSize: 12)),
+                  child: Text(
+                    typeLabel,
+                    style: TextStyle(
+                      color: _typeColor(set.setType),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
+                  ),
                 ),
               )
             else
               SizedBox(
                 width: 32,
-                child: Text(typeLabel, style: TextStyle(color: set.isCompleted ? AppColors.accent : AppColors.textSecondary, fontWeight: FontWeight.w700, fontSize: 14)),
+                child: Text(
+                  typeLabel,
+                  style: TextStyle(
+                    color: set.isCompleted
+                        ? AppColors.accent
+                        : AppColors.textSecondary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
               ),
             const SizedBox(width: 8),
             Expanded(
@@ -407,7 +548,11 @@ class _EditableSetRow extends StatelessWidget {
                   : Text(
                       set.weight.toStringAsFixed(1),
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 16),
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
                     ),
             ),
             const SizedBox(width: 8),
@@ -425,12 +570,20 @@ class _EditableSetRow extends StatelessWidget {
                   : Text(
                       '${set.reps}',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 16),
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
                     ),
             ),
             if (isEditing)
               IconButton(
-                icon: const Icon(Icons.close_rounded, size: 18, color: AppColors.textTertiary),
+                icon: const Icon(
+                  Icons.close_rounded,
+                  size: 18,
+                  color: AppColors.textTertiary,
+                ),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 onPressed: () {
@@ -442,8 +595,12 @@ class _EditableSetRow extends StatelessWidget {
               SizedBox(
                 width: 32,
                 child: Icon(
-                  set.isCompleted ? Icons.check_circle_rounded : Icons.circle_outlined,
-                  color: set.isCompleted ? AppColors.accent : AppColors.textTertiary,
+                  set.isCompleted
+                      ? Icons.check_circle_rounded
+                      : Icons.circle_outlined,
+                  color: set.isCompleted
+                      ? AppColors.accent
+                      : AppColors.textTertiary,
                   size: 20,
                 ),
               ),
@@ -454,17 +611,19 @@ class _EditableSetRow extends StatelessWidget {
   }
 
   Color _typeColor(String type) => switch (type) {
-        'warmup' => AppColors.warmup,
-        'dropset' => AppColors.dropset,
-        'failure' => AppColors.failure,
-        _ => AppColors.textSecondary,
-      };
+    'warmup' => AppColors.warmup,
+    'dropset' => AppColors.dropset,
+    'failure' => AppColors.failure,
+    _ => AppColors.textSecondary,
+  };
 
   void _showSetTypeMenu(BuildContext ctx) {
     showModalBottomSheet(
       context: ctx,
       backgroundColor: AppColors.surfaceElevated,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (ctx) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -474,7 +633,9 @@ class _EditableSetRow extends StatelessWidget {
               final isSelected = set.setType == type;
               return ListTile(
                 title: Text(type[0].toUpperCase() + type.substring(1)),
-                trailing: isSelected ? const Icon(Icons.check_rounded, color: AppColors.primary) : null,
+                trailing: isSelected
+                    ? const Icon(Icons.check_rounded, color: AppColors.primary)
+                    : null,
                 onTap: () {
                   dao.updateSet(setId: set.id, setType: type);
                   onChanged();
@@ -524,9 +685,13 @@ class _CompactInputState extends State<_CompactInput> {
   }
 
   String _fmt(double v) {
-    if (v == 0) return '';
+    if (v == 0) {
+      return '';
+    }
     if (widget.isDecimal) {
-      return v == v.truncateToDouble() ? v.toInt().toString() : v.toStringAsFixed(1);
+      return v == v.truncateToDouble()
+          ? v.toInt().toString()
+          : v.toStringAsFixed(1);
     }
     return v.toInt().toString();
   }
@@ -537,17 +702,36 @@ class _CompactInputState extends State<_CompactInput> {
       controller: _ctrl,
       textAlign: TextAlign.center,
       keyboardType: TextInputType.numberWithOptions(decimal: widget.isDecimal),
-      inputFormatters: [FilteringTextInputFormatter.allow(widget.isDecimal ? RegExp(r'[\d.]') : RegExp(r'\d'))],
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(
+          widget.isDecimal ? RegExp(r'[\d.]') : RegExp(r'\d'),
+        ),
+      ],
       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       decoration: InputDecoration(
         hintText: widget.hint,
-        hintStyle: TextStyle(color: AppColors.textTertiary.withValues(alpha: 0.5)),
+        hintStyle: TextStyle(
+          color: AppColors.textTertiary.withValues(alpha: 0.5),
+        ),
         filled: true,
         fillColor: AppColors.surfaceHighlight,
         contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.5))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.5))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.primary)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(
+            color: AppColors.border.withValues(alpha: 0.5),
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(
+            color: AppColors.border.withValues(alpha: 0.5),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.primary),
+        ),
         isDense: true,
       ),
       onSubmitted: (_) {
@@ -572,7 +756,9 @@ Future<void> _exportWorkout(WidgetRef ref, int workoutId) async {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/workout_$workoutId.json');
     await file.writeAsString(jsonStr);
-    await Share.shareXFiles([XFile(file.path)], subject: data['name'] as String);
+    await Share.shareXFiles([
+      XFile(file.path),
+    ], subject: data['name'] as String);
   } catch (_) {}
 }
 
@@ -584,7 +770,11 @@ const _headerStyle = TextStyle(
 );
 
 class _MetricTile extends StatelessWidget {
-  const _MetricTile({required this.icon, required this.value, required this.label});
+  const _MetricTile({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
   final IconData icon;
   final String value;
   final String label;
@@ -594,17 +784,95 @@ class _MetricTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.surfaceElevated, AppColors.surface],
+        ),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.58)),
       ),
       child: Column(
         children: [
           Icon(icon, color: AppColors.primary, size: 22),
           const SizedBox(height: 8),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: AppColors.textPrimary)),
+          Text(
+            value,
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+              color: AppColors.textPrimary,
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(label, style: const TextStyle(fontSize: 11, color: AppColors.textTertiary, fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppColors.textTertiary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EditableDurationTile extends StatelessWidget {
+  const _EditableDurationTile({
+    required this.valueMinutes,
+    required this.onSubmitted,
+  });
+
+  final int valueMinutes;
+  final ValueChanged<String> onSubmitted;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.surfaceElevated, AppColors.surface],
+        ),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.58)),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.timer_outlined, color: AppColors.primary, size: 22),
+          const SizedBox(height: 8),
+          TextFormField(
+            key: ValueKey('detail-duration-$valueMinutes'),
+            initialValue: '$valueMinutes',
+            textAlign: TextAlign.center,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+              color: AppColors.textPrimary,
+            ),
+            decoration: const InputDecoration(
+              suffixText: 'm',
+              isDense: true,
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.zero,
+            ),
+            onFieldSubmitted: onSubmitted,
+          ),
+          const SizedBox(height: 2),
+          const Text(
+            'Duration',
+            style: TextStyle(
+              fontSize: 11,
+              color: AppColors.textTertiary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );

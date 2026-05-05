@@ -19,9 +19,22 @@ class AnalyticsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        bottom: false,
-        child: historyAsync.when(
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.accentMuted.withValues(alpha: 0.26),
+              AppColors.background,
+              AppColors.background,
+            ],
+            stops: const [0, 0.24, 1],
+          ),
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: historyAsync.when(
           data: (workouts) {
             // Compute stats
             final now = DateTime.now();
@@ -45,11 +58,11 @@ class AnalyticsScreen extends ConsumerWidget {
                   children: [
                     Text(
                       'Analytics',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.lexend(
                         fontSize: 32,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
-                        letterSpacing: -0.5,
+                        letterSpacing: 0,
                       ),
                     ),
                     Text(
@@ -179,6 +192,7 @@ class AnalyticsScreen extends ConsumerWidget {
           error: (e, _) => Center(child: Text('Error: $e')),
         ),
       ),
+      ),
     );
   }
 
@@ -224,9 +238,17 @@ class _StatCard extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surfaceElevated,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              color.withValues(alpha: 0.13),
+              AppColors.surfaceElevated,
+              AppColors.surfaceDim,
+            ],
+          ),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withValues(alpha: 0.22)),
         ),
         child: Row(
           children: [
@@ -239,7 +261,7 @@ class _StatCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Text(value, style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w700, color: color, height: 1)),
+                    Text(value, style: GoogleFonts.lexend(fontSize: 32, fontWeight: FontWeight.w700, color: color, height: 1)),
                     if (subtext != null) ...[
                       const SizedBox(width: 6),
                       Text(subtext!, style: const TextStyle(fontSize: 12, color: AppColors.textTertiary)),
@@ -253,7 +275,7 @@ class _StatCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('$totalThisMonth', style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textSecondary, height: 1)),
+                  Text('$totalThisMonth', style: GoogleFonts.lexend(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textSecondary, height: 1)),
                   const Text('this month', style: TextStyle(fontSize: 11, color: AppColors.textTertiary)),
                 ],
               ),
@@ -266,9 +288,17 @@ class _StatCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       constraints: const BoxConstraints(minHeight: 140),
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color.withValues(alpha: 0.13),
+            AppColors.surfaceElevated,
+            AppColors.surfaceDim,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -283,7 +313,7 @@ class _StatCard extends StatelessWidget {
           const Spacer(),
           RichText(
             text: TextSpan(children: [
-              TextSpan(text: value, style: GoogleFonts.outfit(fontSize: 40, fontWeight: FontWeight.w700, color: color, height: 1)),
+              TextSpan(text: value, style: GoogleFonts.lexend(fontSize: 40, fontWeight: FontWeight.w700, color: color, height: 1)),
               if (unit != null)
                 TextSpan(text: ' $unit', style: TextStyle(fontSize: 16, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
             ]),
@@ -320,16 +350,23 @@ class _ChartCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.surfaceElevated,
+            AppColors.surface,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+            style: GoogleFonts.lexend(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 2),
@@ -410,11 +447,11 @@ class _MuscleGroupBars extends StatelessWidget {
   Widget build(BuildContext context) {
     // Static muscle groups as we don't track this per-set yet
     final groups = [
-      ('Chest', 0.85, AppColors.primary),
-      ('Back', 0.70, AppColors.primary.withValues(alpha: 0.7)),
+      ('Chest', 0.85, AppColors.primaryVariant),
+      ('Back', 0.70, AppColors.primary),
       ('Legs', 0.95, AppColors.accent),
       ('Arms', 0.40, AppColors.warning),
-      ('Shoulders', 0.55, AppColors.primary.withValues(alpha: 0.5)),
+      ('Shoulders', 0.55, AppColors.dropset),
     ];
 
     return Column(

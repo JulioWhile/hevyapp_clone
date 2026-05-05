@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:hevy_app/app/theme/colors.dart';
 import 'package:hevy_app/core/providers/unit_providers.dart';
@@ -16,21 +17,35 @@ class ProfileScreen extends ConsumerWidget {
     final prsAsync = ref.watch(allPRsProvider);
 
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: ListView(
+      backgroundColor: AppColors.background,
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.primaryMuted.withValues(alpha: 0.28),
+              AppColors.background,
+              AppColors.background,
+            ],
+            stops: const [0, 0.24, 1],
+          ),
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
           children: [
             // ─── Header ───────────────────────────────────
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Profile',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
+                  style: GoogleFonts.lexend(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0,
                   ),
                 ),
                 IconButton(
@@ -39,7 +54,8 @@ class ProfileScreen extends ConsumerWidget {
                     height: 36,
                     decoration: BoxDecoration(
                       color: AppColors.surfaceElevated,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
                     ),
                     child: const Icon(Icons.settings_rounded, size: 20, color: AppColors.textSecondary),
                   ),
@@ -105,8 +121,8 @@ class ProfileScreen extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.border.withValues(alpha: 0.58)),
                     ),
                     child: Column(
                       children: [
@@ -128,8 +144,8 @@ class ProfileScreen extends ConsumerWidget {
                       margin: const EdgeInsets.only(bottom: 8),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.border.withValues(alpha: 0.58)),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(14),
@@ -165,11 +181,18 @@ class ProfileScreen extends ConsumerWidget {
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                               decoration: BoxDecoration(
                                 color: AppColors.warning.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(6),
                               ),
-                              child: const Text(
-                                '🏆 PR',
-                                style: TextStyle(color: AppColors.warning, fontWeight: FontWeight.w700, fontSize: 12),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.emoji_events_rounded, color: AppColors.warning, size: 13),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'PR',
+                                    style: TextStyle(color: AppColors.warning, fontWeight: FontWeight.w700, fontSize: 12),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -183,6 +206,7 @@ class ProfileScreen extends ConsumerWidget {
               error: (e, _) => Center(child: Text('Error: $e')),
             ),
           ],
+          ),
         ),
       ),
     );
@@ -207,9 +231,17 @@ class _GlassStatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color.withValues(alpha: 0.13),
+            AppColors.surfaceElevated,
+            AppColors.surfaceDim,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
       ),
       child: Column(
         children: [
@@ -217,11 +249,11 @@ class _GlassStatCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             value,
-            style: TextStyle(
+            style: GoogleFonts.lexend(
               fontSize: 32,
               fontWeight: FontWeight.w800,
               color: color,
-              letterSpacing: -1,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 4),

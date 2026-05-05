@@ -41,9 +41,9 @@ class SetRow extends ConsumerWidget {
         padding: const EdgeInsets.only(left: 8, right: 4, top: 4, bottom: 4),
         decoration: BoxDecoration(
           color: isCompleted ? AppColors.accent.withValues(alpha: 0.1) : AppColors.surfaceElevated,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isCompleted ? AppColors.accent.withValues(alpha: 0.3) : Colors.transparent,
+            color: isCompleted ? AppColors.accent.withValues(alpha: 0.34) : AppColors.border.withValues(alpha: 0.28),
             width: 1,
           ),
         ),

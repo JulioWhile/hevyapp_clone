@@ -30,12 +30,26 @@ class ExerciseDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(exercise.name),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.primaryMuted.withValues(alpha: 0.24),
+              AppColors.background,
+              AppColors.background,
+            ],
+            stops: const [0, 0.22, 1],
+          ),
+        ),
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
           // ─── Header Info ──────────────────────────
           Row(
             children: [
@@ -67,7 +81,7 @@ class ExerciseDetailScreen extends ConsumerWidget {
           // ─── Exercise GIF ─────────────────────────
           if (exercise.gifUrl != null) ...[
             ClipRRect(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(8),
               child: Image.asset(
                 'assets/gifs/${exercise.gifUrl}',
                 width: double.infinity,
@@ -153,7 +167,8 @@ class ExerciseDetailScreen extends ConsumerWidget {
             height: 250,
             child: _buildChart(ref, exercise.id, false),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -163,7 +178,8 @@ class ExerciseDetailScreen extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.55)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -191,8 +207,8 @@ class ExerciseDetailScreen extends ConsumerWidget {
           return Container(
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.border.withValues(alpha: 0.58)),
             ),
             alignment: Alignment.center,
             child: const Text(
@@ -225,8 +241,8 @@ class ExerciseDetailScreen extends ConsumerWidget {
           padding: const EdgeInsets.only(right: 20, top: 20, bottom: 10, left: 0),
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.border.withValues(alpha: 0.58)),
           ),
           child: LineChart(
             LineChartData(
@@ -323,7 +339,7 @@ class ExerciseDetailScreen extends ConsumerWidget {
                     return touchedSpots.map((LineBarSpot touchedSpot) {
                       final date = data[touchedSpot.x.toInt()].date;
                       return LineTooltipItem(
-                        '\${touchedSpot.y.toStringAsFixed(1)} $unitLabel\n',
+                        '${touchedSpot.y.toStringAsFixed(1)} $unitLabel\n',
                         const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                         children: [
                           TextSpan(
@@ -341,7 +357,7 @@ class ExerciseDetailScreen extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) => Center(child: Text('Error: \$e', style: const TextStyle(color: AppColors.error))),
+      error: (e, st) => Center(child: Text('Error: $e', style: const TextStyle(color: AppColors.error))),
     );
   }
 

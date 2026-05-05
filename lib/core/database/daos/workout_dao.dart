@@ -13,10 +13,7 @@ class WorkoutDao extends DatabaseAccessor<AppDatabase> with _$WorkoutDaoMixin {
   // ─── Workout CRUD ────────────────────────────────────────
 
   /// Create a new workout, returns its ID.
-  Future<int> createWorkout({
-    required String name,
-    int? templateId,
-  }) {
+  Future<int> createWorkout({required String name, int? templateId}) {
     return into(workouts).insert(
       WorkoutsCompanion.insert(
         name: name,
@@ -28,7 +25,9 @@ class WorkoutDao extends DatabaseAccessor<AppDatabase> with _$WorkoutDaoMixin {
 
   /// Finish a workout — set finished time and duration.
   Future<void> finishWorkout(int workoutId) async {
-    final workout = await (select(workouts)..where((t) => t.id.equals(workoutId))).getSingle();
+    final workout = await (select(
+      workouts,
+    )..where((t) => t.id.equals(workoutId))).getSingle();
     final duration = DateTime.now().difference(workout.startedAt).inSeconds;
 
     await (update(workouts)..where((t) => t.id.equals(workoutId))).write(
@@ -42,17 +41,21 @@ class WorkoutDao extends DatabaseAccessor<AppDatabase> with _$WorkoutDaoMixin {
   /// Delete a workout and all its exercises/sets (cascade).
   Future<void> deleteWorkout(int workoutId) async {
     // Get workout exercises first.
-    final wExercises = await (select(workoutExercises)
-          ..where((t) => t.workoutId.equals(workoutId)))
-        .get();
+    final wExercises = await (select(
+      workoutExercises,
+    )..where((t) => t.workoutId.equals(workoutId))).get();
 
     // Delete sets for each workout exercise.
     for (final we in wExercises) {
-      await (delete(workoutSets)..where((t) => t.workoutExerciseId.equals(we.id))).go();
+      await (delete(
+        workoutSets,
+      )..where((t) => t.workoutExerciseId.equals(we.id))).go();
     }
 
     // Delete workout exercises.
-    await (delete(workoutExercises)..where((t) => t.workoutId.equals(workoutId))).go();
+    await (delete(
+      workoutExercises,
+    )..where((t) => t.workoutId.equals(workoutId))).go();
 
     // Delete workout.
     await (delete(workouts)..where((t) => t.id.equals(workoutId))).go();
@@ -69,6 +72,13 @@ class WorkoutDao extends DatabaseAccessor<AppDatabase> with _$WorkoutDaoMixin {
   Future<void> updateWorkoutName(int workoutId, String name) {
     return (update(workouts)..where((t) => t.id.equals(workoutId))).write(
       WorkoutsCompanion(name: Value(name)),
+    );
+  }
+
+  /// Update the stored workout duration.
+  Future<void> updateWorkoutDuration(int workoutId, int durationSeconds) {
+    return (update(workouts)..where((t) => t.id.equals(workoutId))).write(
+      WorkoutsCompanion(durationSeconds: Value(durationSeconds)),
     );
   }
 
@@ -121,12 +131,18 @@ class WorkoutDao extends DatabaseAccessor<AppDatabase> with _$WorkoutDaoMixin {
   }
 
   /// Get all exercises for a workout with exercise details.
-  Future<List<WorkoutExerciseWithDetails>> getWorkoutExercises(int workoutId) async {
-    final query = select(workoutExercises).join([
-      innerJoin(exercises, exercises.id.equalsExp(workoutExercises.exerciseId)),
-    ])
-      ..where(workoutExercises.workoutId.equals(workoutId))
-      ..orderBy([OrderingTerm.asc(workoutExercises.orderIndex)]);
+  Future<List<WorkoutExerciseWithDetails>> getWorkoutExercises(
+    int workoutId,
+  ) async {
+    final query =
+        select(workoutExercises).join([
+            innerJoin(
+              exercises,
+              exercises.id.equalsExp(workoutExercises.exerciseId),
+            ),
+          ])
+          ..where(workoutExercises.workoutId.equals(workoutId))
+          ..orderBy([OrderingTerm.asc(workoutExercises.orderIndex)]);
 
     final rows = await query.get();
     return rows.map((row) {
@@ -139,23 +155,30 @@ class WorkoutDao extends DatabaseAccessor<AppDatabase> with _$WorkoutDaoMixin {
 
   /// Remove an exercise from a workout (and its sets).
   Future<void> removeExerciseFromWorkout(int workoutExerciseId) async {
-    await (delete(workoutSets)..where((t) => t.workoutExerciseId.equals(workoutExerciseId))).go();
-    await (delete(workoutExercises)..where((t) => t.id.equals(workoutExerciseId))).go();
+    await (delete(
+      workoutSets,
+    )..where((t) => t.workoutExerciseId.equals(workoutExerciseId))).go();
+    await (delete(
+      workoutExercises,
+    )..where((t) => t.id.equals(workoutExerciseId))).go();
   }
 
   /// Update exercise notes.
   Future<void> updateExerciseNotes(int workoutExerciseId, String? notes) {
-    return (update(workoutExercises)..where((t) => t.id.equals(workoutExerciseId))).write(
-      WorkoutExercisesCompanion(notes: Value(notes)),
-    );
+    return (update(workoutExercises)
+          ..where((t) => t.id.equals(workoutExerciseId)))
+        .write(WorkoutExercisesCompanion(notes: Value(notes)));
   }
 
   /// Reorder exercises in a workout.
-  Future<void> reorderExercises(int workoutId, List<int> workoutExerciseIds) async {
+  Future<void> reorderExercises(
+    int workoutId,
+    List<int> workoutExerciseIds,
+  ) async {
     for (int i = 0; i < workoutExerciseIds.length; i++) {
-      await (update(workoutExercises)..where((t) => t.id.equals(workoutExerciseIds[i]))).write(
-        WorkoutExercisesCompanion(orderIndex: Value(i)),
-      );
+      await (update(workoutExercises)
+            ..where((t) => t.id.equals(workoutExerciseIds[i])))
+          .write(WorkoutExercisesCompanion(orderIndex: Value(i)));
     }
   }
 
@@ -195,7 +218,9 @@ class WorkoutDao extends DatabaseAccessor<AppDatabase> with _$WorkoutDaoMixin {
         weight: weight != null ? Value(weight) : const Value.absent(),
         reps: reps != null ? Value(reps) : const Value.absent(),
         setType: setType != null ? Value(setType) : const Value.absent(),
-        isCompleted: isCompleted != null ? Value(isCompleted) : const Value.absent(),
+        isCompleted: isCompleted != null
+            ? Value(isCompleted)
+            : const Value.absent(),
         rpe: rpe != null ? Value(rpe) : const Value.absent(),
         rir: rir != null ? Value(rir) : const Value.absent(),
       ),
@@ -228,14 +253,19 @@ class WorkoutDao extends DatabaseAccessor<AppDatabase> with _$WorkoutDaoMixin {
   /// Get the most recent completed sets for an exercise (from last workout).
   Future<List<WorkoutSet>> getPreviousPerformance(int exerciseId) async {
     // Find the most recent completed workout containing this exercise.
-    final query = select(workoutExercises).join([
-      innerJoin(workouts, workouts.id.equalsExp(workoutExercises.workoutId)),
-    ])
-      ..where(
-        workoutExercises.exerciseId.equals(exerciseId) & workouts.finishedAt.isNotNull(),
-      )
-      ..orderBy([OrderingTerm.desc(workouts.startedAt)])
-      ..limit(1);
+    final query =
+        select(workoutExercises).join([
+            innerJoin(
+              workouts,
+              workouts.id.equalsExp(workoutExercises.workoutId),
+            ),
+          ])
+          ..where(
+            workoutExercises.exerciseId.equals(exerciseId) &
+                workouts.finishedAt.isNotNull(),
+          )
+          ..orderBy([OrderingTerm.desc(workouts.startedAt)])
+          ..limit(1);
 
     final rows = await query.get();
     if (rows.isEmpty) return [];
@@ -260,12 +290,16 @@ class WorkoutDao extends DatabaseAccessor<AppDatabase> with _$WorkoutDaoMixin {
       ''',
       variables: [Variable.withInt(exerciseId)],
     );
-    
+
     final rows = await query.get();
-    return rows.map((r) => ChartDataPoint(
-      date: DateTime.parse(r.read<String>('date')),
-      value: r.read<double>('value'),
-    )).toList();
+    return rows
+        .map(
+          (r) => ChartDataPoint(
+            date: DateTime.parse(r.read<String>('date')),
+            value: r.read<double>('value'),
+          ),
+        )
+        .toList();
   }
 
   /// Get volume history for an exercise over time.
@@ -282,12 +316,16 @@ class WorkoutDao extends DatabaseAccessor<AppDatabase> with _$WorkoutDaoMixin {
       ''',
       variables: [Variable.withInt(exerciseId)],
     );
-    
+
     final rows = await query.get();
-    return rows.map((r) => ChartDataPoint(
-      date: DateTime.parse(r.read<String>('date')),
-      value: r.read<double>('value'),
-    )).toList();
+    return rows
+        .map(
+          (r) => ChartDataPoint(
+            date: DateTime.parse(r.read<String>('date')),
+            value: r.read<double>('value'),
+          ),
+        )
+        .toList();
   }
 
   /// Compile a workout into a map for JSON/CSV export.
@@ -302,14 +340,19 @@ class WorkoutDao extends DatabaseAccessor<AppDatabase> with _$WorkoutDaoMixin {
         'exercise': we.exercise.name,
         'muscleGroup': we.exercise.primaryMuscleGroup,
         'equipment': we.exercise.equipment,
-        'sets': sets.where((s) => s.isCompleted).map((s) => {
-          'set': s.setNumber,
-          'type': s.setType,
-          'weight': s.weight,
-          'reps': s.reps,
-          if (s.rpe != null) 'rpe': s.rpe,
-          if (s.rir != null) 'rir': s.rir,
-        }).toList(),
+        'sets': sets
+            .where((s) => s.isCompleted)
+            .map(
+              (s) => {
+                'set': s.setNumber,
+                'type': s.setType,
+                'weight': s.weight,
+                'reps': s.reps,
+                if (s.rpe != null) 'rpe': s.rpe,
+                if (s.rir != null) 'rir': s.rir,
+              },
+            )
+            .toList(),
       });
     }
 
