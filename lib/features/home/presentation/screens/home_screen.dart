@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,10 +29,6 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final activeWorkout = ref.watch(activeWorkoutProvider);
-    final resumableWorkout = activeWorkout?.isActive == true
-        ? activeWorkout
-        : null;
     final routinesAsync = ref.watch(routinesProvider);
     final historyAsync = ref.watch(workoutHistoryProvider);
 
@@ -163,13 +157,6 @@ class HomeScreen extends ConsumerWidget {
               ),
 
               const SizedBox(height: 20),
-
-              // ─── Active Workout Banner ────────────────────────
-              if (resumableWorkout != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                  child: _ActiveBanner(workout: resumableWorkout),
-                ),
 
               // ─── Today's Workout Bento Card ───────────────────
               Padding(
@@ -769,87 +756,6 @@ class _RoutineCard extends ConsumerWidget {
               error: (_, _) => const SizedBox.shrink(),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Active Workout Banner ───────────────────────────────────
-class _ActiveBanner extends StatelessWidget {
-  const _ActiveBanner({required this.workout});
-  final ActiveWorkoutState workout;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.18),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.36),
-            ),
-          ),
-          child: InkWell(
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const ActiveWorkoutScreen(),
-                fullscreenDialog: true,
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.play_arrow_rounded,
-                    color: AppColors.primary,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        workout.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
-                        ),
-                      ),
-                      Text(
-                        '${workout.exercises.length} exercises · In progress',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Text(
-                  'Resume',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );

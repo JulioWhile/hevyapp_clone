@@ -41,12 +41,14 @@ class WorkoutTemplateExercises extends Table {
 /// A completed or in-progress workout session.
 class Workouts extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get templateId => integer().nullable().references(WorkoutTemplates, #id)();
+  IntColumn get templateId =>
+      integer().nullable().references(WorkoutTemplates, #id)();
   TextColumn get name => text().withLength(min: 1, max: 100)();
   DateTimeColumn get startedAt => dateTime()();
   DateTimeColumn get finishedAt => dateTime().nullable()();
   IntColumn get durationSeconds => integer().withDefault(const Constant(0))();
   TextColumn get notes => text().nullable()();
+  TextColumn get mediaPaths => text().nullable()();
 }
 
 /// An exercise performed within a workout (ordered, supports supersets).
@@ -62,7 +64,8 @@ class WorkoutExercises extends Table {
 /// Individual set within a workout exercise.
 class WorkoutSets extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get workoutExerciseId => integer().references(WorkoutExercises, #id)();
+  IntColumn get workoutExerciseId =>
+      integer().references(WorkoutExercises, #id)();
   IntColumn get setNumber => integer()();
   TextColumn get setType => text().withDefault(const Constant('normal'))();
   RealColumn get weight => real().withDefault(const Constant(0.0))();
@@ -77,7 +80,8 @@ class WorkoutSets extends Table {
 class PersonalRecords extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get exerciseId => integer().references(Exercises, #id)();
-  TextColumn get recordType => text()(); // max_weight, max_reps, max_volume, estimated_1rm
+  TextColumn get recordType =>
+      text()(); // max_weight, max_reps, max_volume, estimated_1rm
   RealColumn get value => real()();
   IntColumn get workoutId => integer().references(Workouts, #id)();
   DateTimeColumn get achievedAt => dateTime()();
@@ -88,6 +92,7 @@ class PersonalRecords extends Table {
 class UserSettings extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get unitSystem => text().withDefault(const Constant('metric'))();
-  IntColumn get defaultRestTimerSeconds => integer().withDefault(const Constant(90))();
+  IntColumn get defaultRestTimerSeconds =>
+      integer().withDefault(const Constant(90))();
   TextColumn get themeMode => text().withDefault(const Constant('dark'))();
 }

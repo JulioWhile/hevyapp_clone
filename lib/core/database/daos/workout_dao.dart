@@ -24,11 +24,13 @@ class WorkoutDao extends DatabaseAccessor<AppDatabase> with _$WorkoutDaoMixin {
   }
 
   /// Finish a workout — set finished time and duration.
-  Future<void> finishWorkout(int workoutId) async {
+  Future<void> finishWorkout(int workoutId, {int? durationSeconds}) async {
     final workout = await (select(
       workouts,
     )..where((t) => t.id.equals(workoutId))).getSingle();
-    final duration = DateTime.now().difference(workout.startedAt).inSeconds;
+    final duration =
+        durationSeconds ??
+        DateTime.now().difference(workout.startedAt).inSeconds;
 
     await (update(workouts)..where((t) => t.id.equals(workoutId))).write(
       WorkoutsCompanion(
@@ -79,6 +81,13 @@ class WorkoutDao extends DatabaseAccessor<AppDatabase> with _$WorkoutDaoMixin {
   Future<void> updateWorkoutDuration(int workoutId, int durationSeconds) {
     return (update(workouts)..where((t) => t.id.equals(workoutId))).write(
       WorkoutsCompanion(durationSeconds: Value(durationSeconds)),
+    );
+  }
+
+  /// Update attached media file paths as a JSON-encoded list.
+  Future<void> updateWorkoutMediaPaths(int workoutId, String? mediaPaths) {
+    return (update(workouts)..where((t) => t.id.equals(workoutId))).write(
+      WorkoutsCompanion(mediaPaths: Value(mediaPaths)),
     );
   }
 

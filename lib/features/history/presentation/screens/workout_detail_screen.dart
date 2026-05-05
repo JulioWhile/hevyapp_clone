@@ -15,6 +15,7 @@ import 'package:hevy_app/core/providers/unit_providers.dart';
 import 'package:hevy_app/features/history/presentation/widgets/muscle_split_card.dart';
 import 'package:hevy_app/features/workout/presentation/providers/workout_providers.dart';
 import 'package:hevy_app/features/workout/presentation/widgets/exercise_picker_sheet.dart';
+import 'package:hevy_app/features/workout/presentation/widgets/workout_media_picker.dart';
 import '../providers/history_providers.dart';
 
 class WorkoutDetailScreen extends ConsumerStatefulWidget {
@@ -29,6 +30,26 @@ class WorkoutDetailScreen extends ConsumerStatefulWidget {
 
 class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
   bool _isEditing = false;
+  int? _loadedWorkoutId;
+  late final TextEditingController _titleController;
+  late final TextEditingController _notesController;
+  late final TextEditingController _durationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController();
+    _notesController = TextEditingController();
+    _durationController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _notesController.dispose();
+    _durationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +65,7 @@ class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
           final dateStr = DateFormat('EEEE, MMM d, yyyy').format(w.startedAt);
           final timeStr = DateFormat('h:mm a').format(w.startedAt);
           final durationMin = w.durationSeconds ~/ 60;
+          _syncControllers(w, durationMin);
           final vol = data.totalVolume;
           final volumeFormatted = vol >= 1000
               ? '${(vol / 1000).toStringAsFixed(1)}k'
@@ -52,7 +74,7 @@ class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
           return CustomScrollView(
             slivers: [
               SliverAppBar(
-                expandedHeight: 200,
+                expandedHeight: 260,
                 pinned: true,
                 backgroundColor: AppColors.surface,
                 actions: [
@@ -61,11 +83,18 @@ class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
                       _isEditing ? Icons.check_rounded : Icons.edit_rounded,
                     ),
                     tooltip: _isEditing ? 'Done' : 'Edit',
-                    onPressed: () {
-                      setState(() => _isEditing = !_isEditing);
-                      if (!_isEditing) {
+                    onPressed: () async {
+                      FocusScope.of(context).unfocus();
+
+                      if (_isEditing) {
+                        await _saveWorkoutDetails(w.id);
+                        if (!mounted) return;
+                        setState(() => _isEditing = false);
                         ref.invalidate(workoutDetailProvider(widget.workoutId));
                         ref.invalidate(workoutHistoryProvider);
+                      } else {
+                        _syncControllers(w, durationMin, force: true);
+                        setState(() => _isEditing = true);
                       }
                     },
                   ),
@@ -79,43 +108,6 @@ class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
                         ),
                 ],
                 flexibleSpace: FlexibleSpaceBar(
-                  titlePadding: const EdgeInsets.only(
-                    left: 56,
-                    bottom: 16,
-                    right: 16,
-                  ),
-                  title: _isEditing
-                      ? TextField(
-                          controller: TextEditingController(text: w.name),
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                          textCapitalization: TextCapitalization.words,
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            isDense: true,
-                          ),
-                          onSubmitted: (val) {
-                            if (val.trim().isNotEmpty) {
-                              ref
-                                  .read(workoutDaoProvider)
-                                  .updateWorkoutName(w.id, val.trim());
-                              ref.invalidate(
-                                workoutDetailProvider(widget.workoutId),
-                              );
-                              ref.invalidate(workoutHistoryProvider);
-                            }
-                          },
-                        )
-                      : Text(
-                          w.name,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
                   background: Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -128,25 +120,96 @@ class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
                       ),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 60),
+                      padding: EdgeInsets.fromLTRB(
+                        20,
+                        MediaQuery.paddingOf(context).top + kToolbarHeight + 18,
+                        20,
+                        20,
+                      ),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            dateStr,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: AppColors.textSecondary,
-                            ),
+                          _isEditing
+                              ? TextField(
+                                  controller: _titleController,
+                                  maxLines: 1,
+                                  style: const TextStyle(
+                                    fontSize: 30,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                  textCapitalization: TextCapitalization.words,
+                                  decoration: InputDecoration(
+                                    hintText: 'Workout title',
+                                    filled: true,
+                                    fillColor: Colors.black.withValues(
+                                      alpha: 0.18,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    isDense: true,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                  ),
+                                  onSubmitted: (_) => _saveWorkoutDetails(w.id),
+                                )
+                              : Text(
+                                  w.name,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 34,
+                                    height: 1.05,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.calendar_today_outlined,
+                                size: 16,
+                                color: AppColors.textTertiary,
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  dateStr,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            timeStr,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textTertiary,
-                            ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.schedule_outlined,
+                                size: 16,
+                                color: AppColors.textTertiary,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                timeStr,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -166,25 +229,9 @@ class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
                           Expanded(
                             child: _isEditing
                                 ? _EditableDurationTile(
-                                    valueMinutes: durationMin,
-                                    onSubmitted: (value) async {
-                                      final minutes = int.tryParse(
-                                        value.trim(),
-                                      );
-                                      if (minutes == null || minutes <= 0) {
-                                        return;
-                                      }
-                                      await ref
-                                          .read(workoutDaoProvider)
-                                          .updateWorkoutDuration(
-                                            w.id,
-                                            minutes * 60,
-                                          );
-                                      ref.invalidate(
-                                        workoutDetailProvider(widget.workoutId),
-                                      );
-                                      ref.invalidate(workoutHistoryProvider);
-                                    },
+                                    controller: _durationController,
+                                    onSubmitted: (_) =>
+                                        _saveWorkoutDetails(w.id),
                                   )
                                 : _MetricTile(
                                     icon: Icons.timer_outlined,
@@ -214,10 +261,27 @@ class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
                       const SizedBox(height: 20),
                       MuscleSplitCard(entries: data.muscleSplit),
 
+                      const SizedBox(height: 20),
+                      WorkoutMediaPicker(
+                        paths: decodeWorkoutMediaPaths(w.mediaPaths),
+                        enabled: _isEditing,
+                        onChanged: (paths) async {
+                          await ref
+                              .read(workoutDaoProvider)
+                              .updateWorkoutMediaPaths(
+                                w.id,
+                                encodeWorkoutMediaPaths(paths),
+                              );
+                          ref.invalidate(
+                            workoutDetailProvider(widget.workoutId),
+                          );
+                        },
+                      ),
+
                       // Notes — editable in both modes
                       const SizedBox(height: 20),
                       TextFormField(
-                        initialValue: w.notes,
+                        controller: _notesController,
                         readOnly: !_isEditing,
                         decoration: InputDecoration(
                           hintText: 'Workout notes...',
@@ -242,15 +306,8 @@ class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
                           fontSize: 14,
                           color: AppColors.textSecondary,
                         ),
-                        onChanged: _isEditing
-                            ? (val) {
-                                ref
-                                    .read(workoutDaoProvider)
-                                    .updateWorkoutNotes(
-                                      w.id,
-                                      val.trim().isEmpty ? null : val.trim(),
-                                    );
-                              }
+                        onFieldSubmitted: _isEditing
+                            ? (_) => _saveWorkoutDetails(w.id)
                             : null,
                       ),
 
@@ -311,6 +368,35 @@ class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
     // Fallback: refresh after picker closes.
     if (mounted) {
       ref.invalidate(workoutDetailProvider(widget.workoutId));
+    }
+  }
+
+  void _syncControllers(
+    Workout workout,
+    int durationMin, {
+    bool force = false,
+  }) {
+    if (!force && _isEditing && _loadedWorkoutId == workout.id) return;
+    if (!force && _loadedWorkoutId == workout.id) return;
+
+    _loadedWorkoutId = workout.id;
+    _titleController.text = workout.name;
+    _notesController.text = workout.notes ?? '';
+    _durationController.text = '$durationMin';
+  }
+
+  Future<void> _saveWorkoutDetails(int workoutId) async {
+    final title = _titleController.text.trim();
+    final notes = _notesController.text.trim();
+    final minutes = int.tryParse(_durationController.text.trim());
+    final dao = ref.read(workoutDaoProvider);
+
+    if (title.isNotEmpty) {
+      await dao.updateWorkoutName(workoutId, title);
+    }
+    await dao.updateWorkoutNotes(workoutId, notes.isEmpty ? null : notes);
+    if (minutes != null && minutes > 0) {
+      await dao.updateWorkoutDuration(workoutId, minutes * 60);
     }
   }
 }
@@ -698,47 +784,59 @@ class _CompactInputState extends State<_CompactInput> {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: _ctrl,
-      textAlign: TextAlign.center,
-      keyboardType: TextInputType.numberWithOptions(decimal: widget.isDecimal),
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(
-          widget.isDecimal ? RegExp(r'[\d.]') : RegExp(r'\d'),
-        ),
-      ],
-      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-      decoration: InputDecoration(
-        hintText: widget.hint,
-        hintStyle: TextStyle(
-          color: AppColors.textTertiary.withValues(alpha: 0.5),
-        ),
-        filled: true,
-        fillColor: AppColors.surfaceHighlight,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(
-            color: AppColors.border.withValues(alpha: 0.5),
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(
-            color: AppColors.border.withValues(alpha: 0.5),
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.primary),
-        ),
-        isDense: true,
-      ),
-      onSubmitted: (_) {
-        final val = double.tryParse(_ctrl.text) ?? 0.0;
-        widget.onSubmitted(val);
+    return Focus(
+      onFocusChange: (hasFocus) {
+        if (!hasFocus) _submit();
       },
+      child: TextField(
+        controller: _ctrl,
+        textAlign: TextAlign.center,
+        keyboardType: TextInputType.numberWithOptions(
+          decimal: widget.isDecimal,
+        ),
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(
+            widget.isDecimal ? RegExp(r'[\d.]') : RegExp(r'\d'),
+          ),
+        ],
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        decoration: InputDecoration(
+          hintText: widget.hint,
+          hintStyle: TextStyle(
+            color: AppColors.textTertiary.withValues(alpha: 0.5),
+          ),
+          filled: true,
+          fillColor: AppColors.surfaceHighlight,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 8,
+            vertical: 10,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(
+              color: AppColors.border.withValues(alpha: 0.5),
+            ),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(
+              color: AppColors.border.withValues(alpha: 0.5),
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: AppColors.primary),
+          ),
+          isDense: true,
+        ),
+        onSubmitted: (_) => _submit(),
+      ),
     );
+  }
+
+  void _submit() {
+    final val = double.tryParse(_ctrl.text) ?? 0.0;
+    widget.onSubmitted(val);
   }
 
   @override
@@ -821,11 +919,11 @@ class _MetricTile extends StatelessWidget {
 
 class _EditableDurationTile extends StatelessWidget {
   const _EditableDurationTile({
-    required this.valueMinutes,
+    required this.controller,
     required this.onSubmitted,
   });
 
-  final int valueMinutes;
+  final TextEditingController controller;
   final ValueChanged<String> onSubmitted;
 
   @override
@@ -846,8 +944,7 @@ class _EditableDurationTile extends StatelessWidget {
           const Icon(Icons.timer_outlined, color: AppColors.primary, size: 22),
           const SizedBox(height: 8),
           TextFormField(
-            key: ValueKey('detail-duration-$valueMinutes'),
-            initialValue: '$valueMinutes',
+            controller: controller,
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],

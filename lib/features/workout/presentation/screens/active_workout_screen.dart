@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 import 'package:hevy_app/app/theme/colors.dart';
 import 'package:hevy_app/core/constants/app_constants.dart';
 import 'package:hevy_app/core/database/app_database.dart';
 import 'package:hevy_app/core/providers/unit_providers.dart';
-import 'package:hevy_app/main.dart';
 import '../providers/workout_providers.dart';
 import '../widgets/exercise_picker_sheet.dart';
 import '../widgets/set_row.dart';
 import '../widgets/rest_timer_bar.dart';
-import 'workout_summary_screen.dart';
+import 'save_workout_screen.dart';
 
 class ActiveWorkoutScreen extends ConsumerWidget {
   const ActiveWorkoutScreen({super.key});
@@ -72,17 +72,29 @@ class ActiveWorkoutScreen extends ConsumerWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              Text(
-                _formatDuration(workout.elapsedSeconds),
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w400,
+              InkWell(
+                onTap: () => _showDurationEditor(context, ref, workout),
+                borderRadius: BorderRadius.circular(6),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Text(
+                    _formatDuration(workout.elapsedSeconds),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.timer_outlined),
+              tooltip: 'Edit duration',
+              onPressed: () => _showDurationEditor(context, ref, workout),
+            ),
             IconButton(
               icon: const Icon(Icons.more_vert_rounded),
               onPressed: () {},
@@ -250,6 +262,97 @@ class ActiveWorkoutScreen extends ConsumerWidget {
     if (m > 0) return '${m}m ${s}s';
     return '${s}s';
   }
+
+  Future<void> _showDurationEditor(
+    BuildContext context,
+    WidgetRef ref,
+    ActiveWorkoutState workout,
+  ) async {
+    var hours = workout.elapsedSeconds ~/ 3600;
+    var minutes = (workout.elapsedSeconds % 3600) ~/ 60;
+    var seconds = workout.elapsedSeconds % 60;
+
+    final updatedSeconds = await showModalBottomSheet<int>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surfaceElevated,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          18,
+          20,
+          20 + MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Workout Timer',
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Started ${DateFormat.jm().format(workout.startedAt)}',
+              style: const TextStyle(color: AppColors.textTertiary),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Expanded(
+                  child: _DurationStepper(
+                    label: 'Hours',
+                    value: hours,
+                    onChanged: (value) => hours = value,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _DurationStepper(
+                    label: 'Minutes',
+                    value: minutes,
+                    max: 59,
+                    onChanged: (value) => minutes = value,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _DurationStepper(
+                    label: 'Seconds',
+                    value: seconds,
+                    max: 59,
+                    onChanged: (value) => seconds = value,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(
+                  context,
+                  (hours * 3600) + (minutes * 60) + seconds,
+                ),
+                child: const Text('Update Duration'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (updatedSeconds != null) {
+      await ref
+          .read(activeWorkoutProvider.notifier)
+          .updateWorkoutDuration(updatedSeconds);
+    }
+  }
 }
 
 class _StickyFooter extends StatelessWidget {
@@ -298,25 +401,10 @@ class _StickyFooter extends StatelessWidget {
             onPressed: workout.exercises.isEmpty
                 ? null
                 : () async {
-                    final workoutId = workout.workoutId!;
-                    ref.read(restTimerProvider.notifier).stop();
-                    await ref
-                        .read(activeWorkoutProvider.notifier)
-                        .finishWorkout();
-
-                    // ignore: avoid_manual_providers_as_ref
-                    final db = ref.read(databaseProvider);
-                    final newPRs = await db.settingsDao.checkAndRecordPRs(
-                      workoutId,
-                    );
-
                     if (context.mounted) {
-                      Navigator.of(context).pushReplacement(
+                      Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => WorkoutSummaryScreen(
-                            workoutId: workoutId,
-                            newPRs: newPRs,
-                          ),
+                          builder: (_) => const SaveWorkoutScreen(),
                         ),
                       );
                     }
@@ -336,6 +424,83 @@ class _StickyFooter extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _DurationStepper extends StatefulWidget {
+  const _DurationStepper({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    this.max,
+  });
+
+  final String label;
+  final int value;
+  final int? max;
+  final ValueChanged<int> onChanged;
+
+  @override
+  State<_DurationStepper> createState() => _DurationStepperState();
+}
+
+class _DurationStepperState extends State<_DurationStepper> {
+  late int _value;
+
+  @override
+  void initState() {
+    super.initState();
+    _value = widget.value;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.label,
+          style: const TextStyle(color: AppColors.textTertiary, fontSize: 12),
+        ),
+        const SizedBox(height: 8),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            children: [
+              IconButton(
+                onPressed: _value == 0 ? null : () => _setValue(_value - 1),
+                icon: const Icon(Icons.remove_rounded),
+              ),
+              Expanded(
+                child: Center(
+                  child: Text(
+                    '$_value',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: widget.max != null && _value >= widget.max!
+                    ? null
+                    : () => _setValue(_value + 1),
+                icon: const Icon(Icons.add_rounded),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _setValue(int value) {
+    setState(() => _value = value);
+    widget.onChanged(value);
   }
 }
 

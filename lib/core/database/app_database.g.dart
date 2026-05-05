@@ -1599,6 +1599,17 @@ class $WorkoutsTable extends Workouts with TableInfo<$WorkoutsTable, Workout> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _mediaPathsMeta = const VerificationMeta(
+    'mediaPaths',
+  );
+  @override
+  late final GeneratedColumn<String> mediaPaths = GeneratedColumn<String>(
+    'media_paths',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1608,6 +1619,7 @@ class $WorkoutsTable extends Workouts with TableInfo<$WorkoutsTable, Workout> {
     finishedAt,
     durationSeconds,
     notes,
+    mediaPaths,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1667,6 +1679,12 @@ class $WorkoutsTable extends Workouts with TableInfo<$WorkoutsTable, Workout> {
         notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
       );
     }
+    if (data.containsKey('media_paths')) {
+      context.handle(
+        _mediaPathsMeta,
+        mediaPaths.isAcceptableOrUnknown(data['media_paths']!, _mediaPathsMeta),
+      );
+    }
     return context;
   }
 
@@ -1704,6 +1722,10 @@ class $WorkoutsTable extends Workouts with TableInfo<$WorkoutsTable, Workout> {
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
       ),
+      mediaPaths: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}media_paths'],
+      ),
     );
   }
 
@@ -1721,6 +1743,7 @@ class Workout extends DataClass implements Insertable<Workout> {
   final DateTime? finishedAt;
   final int durationSeconds;
   final String? notes;
+  final String? mediaPaths;
   const Workout({
     required this.id,
     this.templateId,
@@ -1729,6 +1752,7 @@ class Workout extends DataClass implements Insertable<Workout> {
     this.finishedAt,
     required this.durationSeconds,
     this.notes,
+    this.mediaPaths,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1745,6 +1769,9 @@ class Workout extends DataClass implements Insertable<Workout> {
     map['duration_seconds'] = Variable<int>(durationSeconds);
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || mediaPaths != null) {
+      map['media_paths'] = Variable<String>(mediaPaths);
     }
     return map;
   }
@@ -1764,6 +1791,9 @@ class Workout extends DataClass implements Insertable<Workout> {
       notes: notes == null && nullToAbsent
           ? const Value.absent()
           : Value(notes),
+      mediaPaths: mediaPaths == null && nullToAbsent
+          ? const Value.absent()
+          : Value(mediaPaths),
     );
   }
 
@@ -1780,6 +1810,7 @@ class Workout extends DataClass implements Insertable<Workout> {
       finishedAt: serializer.fromJson<DateTime?>(json['finishedAt']),
       durationSeconds: serializer.fromJson<int>(json['durationSeconds']),
       notes: serializer.fromJson<String?>(json['notes']),
+      mediaPaths: serializer.fromJson<String?>(json['mediaPaths']),
     );
   }
   @override
@@ -1793,6 +1824,7 @@ class Workout extends DataClass implements Insertable<Workout> {
       'finishedAt': serializer.toJson<DateTime?>(finishedAt),
       'durationSeconds': serializer.toJson<int>(durationSeconds),
       'notes': serializer.toJson<String?>(notes),
+      'mediaPaths': serializer.toJson<String?>(mediaPaths),
     };
   }
 
@@ -1804,6 +1836,7 @@ class Workout extends DataClass implements Insertable<Workout> {
     Value<DateTime?> finishedAt = const Value.absent(),
     int? durationSeconds,
     Value<String?> notes = const Value.absent(),
+    Value<String?> mediaPaths = const Value.absent(),
   }) => Workout(
     id: id ?? this.id,
     templateId: templateId.present ? templateId.value : this.templateId,
@@ -1812,6 +1845,7 @@ class Workout extends DataClass implements Insertable<Workout> {
     finishedAt: finishedAt.present ? finishedAt.value : this.finishedAt,
     durationSeconds: durationSeconds ?? this.durationSeconds,
     notes: notes.present ? notes.value : this.notes,
+    mediaPaths: mediaPaths.present ? mediaPaths.value : this.mediaPaths,
   );
   Workout copyWithCompanion(WorkoutsCompanion data) {
     return Workout(
@@ -1828,6 +1862,9 @@ class Workout extends DataClass implements Insertable<Workout> {
           ? data.durationSeconds.value
           : this.durationSeconds,
       notes: data.notes.present ? data.notes.value : this.notes,
+      mediaPaths: data.mediaPaths.present
+          ? data.mediaPaths.value
+          : this.mediaPaths,
     );
   }
 
@@ -1840,7 +1877,8 @@ class Workout extends DataClass implements Insertable<Workout> {
           ..write('startedAt: $startedAt, ')
           ..write('finishedAt: $finishedAt, ')
           ..write('durationSeconds: $durationSeconds, ')
-          ..write('notes: $notes')
+          ..write('notes: $notes, ')
+          ..write('mediaPaths: $mediaPaths')
           ..write(')'))
         .toString();
   }
@@ -1854,6 +1892,7 @@ class Workout extends DataClass implements Insertable<Workout> {
     finishedAt,
     durationSeconds,
     notes,
+    mediaPaths,
   );
   @override
   bool operator ==(Object other) =>
@@ -1865,7 +1904,8 @@ class Workout extends DataClass implements Insertable<Workout> {
           other.startedAt == this.startedAt &&
           other.finishedAt == this.finishedAt &&
           other.durationSeconds == this.durationSeconds &&
-          other.notes == this.notes);
+          other.notes == this.notes &&
+          other.mediaPaths == this.mediaPaths);
 }
 
 class WorkoutsCompanion extends UpdateCompanion<Workout> {
@@ -1876,6 +1916,7 @@ class WorkoutsCompanion extends UpdateCompanion<Workout> {
   final Value<DateTime?> finishedAt;
   final Value<int> durationSeconds;
   final Value<String?> notes;
+  final Value<String?> mediaPaths;
   const WorkoutsCompanion({
     this.id = const Value.absent(),
     this.templateId = const Value.absent(),
@@ -1884,6 +1925,7 @@ class WorkoutsCompanion extends UpdateCompanion<Workout> {
     this.finishedAt = const Value.absent(),
     this.durationSeconds = const Value.absent(),
     this.notes = const Value.absent(),
+    this.mediaPaths = const Value.absent(),
   });
   WorkoutsCompanion.insert({
     this.id = const Value.absent(),
@@ -1893,6 +1935,7 @@ class WorkoutsCompanion extends UpdateCompanion<Workout> {
     this.finishedAt = const Value.absent(),
     this.durationSeconds = const Value.absent(),
     this.notes = const Value.absent(),
+    this.mediaPaths = const Value.absent(),
   }) : name = Value(name),
        startedAt = Value(startedAt);
   static Insertable<Workout> custom({
@@ -1903,6 +1946,7 @@ class WorkoutsCompanion extends UpdateCompanion<Workout> {
     Expression<DateTime>? finishedAt,
     Expression<int>? durationSeconds,
     Expression<String>? notes,
+    Expression<String>? mediaPaths,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1912,6 +1956,7 @@ class WorkoutsCompanion extends UpdateCompanion<Workout> {
       if (finishedAt != null) 'finished_at': finishedAt,
       if (durationSeconds != null) 'duration_seconds': durationSeconds,
       if (notes != null) 'notes': notes,
+      if (mediaPaths != null) 'media_paths': mediaPaths,
     });
   }
 
@@ -1923,6 +1968,7 @@ class WorkoutsCompanion extends UpdateCompanion<Workout> {
     Value<DateTime?>? finishedAt,
     Value<int>? durationSeconds,
     Value<String?>? notes,
+    Value<String?>? mediaPaths,
   }) {
     return WorkoutsCompanion(
       id: id ?? this.id,
@@ -1932,6 +1978,7 @@ class WorkoutsCompanion extends UpdateCompanion<Workout> {
       finishedAt: finishedAt ?? this.finishedAt,
       durationSeconds: durationSeconds ?? this.durationSeconds,
       notes: notes ?? this.notes,
+      mediaPaths: mediaPaths ?? this.mediaPaths,
     );
   }
 
@@ -1959,6 +2006,9 @@ class WorkoutsCompanion extends UpdateCompanion<Workout> {
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
+    if (mediaPaths.present) {
+      map['media_paths'] = Variable<String>(mediaPaths.value);
+    }
     return map;
   }
 
@@ -1971,7 +2021,8 @@ class WorkoutsCompanion extends UpdateCompanion<Workout> {
           ..write('startedAt: $startedAt, ')
           ..write('finishedAt: $finishedAt, ')
           ..write('durationSeconds: $durationSeconds, ')
-          ..write('notes: $notes')
+          ..write('notes: $notes, ')
+          ..write('mediaPaths: $mediaPaths')
           ..write(')'))
         .toString();
   }
@@ -5262,6 +5313,7 @@ typedef $$WorkoutsTableCreateCompanionBuilder =
       Value<DateTime?> finishedAt,
       Value<int> durationSeconds,
       Value<String?> notes,
+      Value<String?> mediaPaths,
     });
 typedef $$WorkoutsTableUpdateCompanionBuilder =
     WorkoutsCompanion Function({
@@ -5272,6 +5324,7 @@ typedef $$WorkoutsTableUpdateCompanionBuilder =
       Value<DateTime?> finishedAt,
       Value<int> durationSeconds,
       Value<String?> notes,
+      Value<String?> mediaPaths,
     });
 
 final class $$WorkoutsTableReferences
@@ -5380,6 +5433,11 @@ class $$WorkoutsTableFilterComposer
 
   ColumnFilters<String> get notes => $composableBuilder(
     column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mediaPaths => $composableBuilder(
+    column: $table.mediaPaths,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5496,6 +5554,11 @@ class $$WorkoutsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get mediaPaths => $composableBuilder(
+    column: $table.mediaPaths,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$WorkoutTemplatesTableOrderingComposer get templateId {
     final $$WorkoutTemplatesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -5550,6 +5613,11 @@ class $$WorkoutsTableAnnotationComposer
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get mediaPaths => $composableBuilder(
+    column: $table.mediaPaths,
+    builder: (column) => column,
+  );
 
   $$WorkoutTemplatesTableAnnotationComposer get templateId {
     final $$WorkoutTemplatesTableAnnotationComposer composer = $composerBuilder(
@@ -5664,6 +5732,7 @@ class $$WorkoutsTableTableManager
                 Value<DateTime?> finishedAt = const Value.absent(),
                 Value<int> durationSeconds = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
+                Value<String?> mediaPaths = const Value.absent(),
               }) => WorkoutsCompanion(
                 id: id,
                 templateId: templateId,
@@ -5672,6 +5741,7 @@ class $$WorkoutsTableTableManager
                 finishedAt: finishedAt,
                 durationSeconds: durationSeconds,
                 notes: notes,
+                mediaPaths: mediaPaths,
               ),
           createCompanionCallback:
               ({
@@ -5682,6 +5752,7 @@ class $$WorkoutsTableTableManager
                 Value<DateTime?> finishedAt = const Value.absent(),
                 Value<int> durationSeconds = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
+                Value<String?> mediaPaths = const Value.absent(),
               }) => WorkoutsCompanion.insert(
                 id: id,
                 templateId: templateId,
@@ -5690,6 +5761,7 @@ class $$WorkoutsTableTableManager
                 finishedAt: finishedAt,
                 durationSeconds: durationSeconds,
                 notes: notes,
+                mediaPaths: mediaPaths,
               ),
           withReferenceMapper: (p0) => p0
               .map(

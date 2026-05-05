@@ -80,8 +80,21 @@ class _AppShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final activeWorkout = ref.watch(activeWorkoutProvider);
+
     return Scaffold(
-      body: navigationShell,
+      body: Stack(
+        children: [
+          navigationShell,
+          if (activeWorkout != null && activeWorkout.isActive)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: MediaQuery.paddingOf(context).bottom + 72,
+              child: _ActiveWorkoutDock(workout: activeWorkout),
+            ),
+        ],
+      ),
       extendBody: true,
       bottomNavigationBar: _GlassNavBar(
         currentIndex: navigationShell.currentIndex,
@@ -121,6 +134,137 @@ class _AppShell extends ConsumerWidget {
         ),
       );
     }
+  }
+}
+
+class _ActiveWorkoutDock extends ConsumerWidget {
+  const _ActiveWorkoutDock({required this.workout});
+
+  final ActiveWorkoutState workout;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentExercise = _currentExerciseName(workout);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const ActiveWorkoutScreen(),
+            fullscreenDialog: true,
+          ),
+        ),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceElevated.withValues(alpha: 0.96),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.accent.withValues(alpha: 0.28)),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black45,
+                blurRadius: 18,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 9,
+                height: 9,
+                decoration: const BoxDecoration(
+                  color: AppColors.accent,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${workout.name}  ${_formatDuration(workout.elapsedSeconds)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    if (currentExercise != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        currentExercise,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.textTertiary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: 'Discard workout',
+                onPressed: () => _confirmDiscard(context, ref),
+                icon: const Icon(Icons.delete_outline_rounded),
+                color: AppColors.textSecondary,
+              ),
+              const Icon(Icons.keyboard_arrow_up_rounded),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String? _currentExerciseName(ActiveWorkoutState workout) {
+    for (final exercise in workout.exercises) {
+      if (exercise.sets.any((set) => !set.isCompleted)) {
+        return exercise.exerciseName;
+      }
+    }
+    return workout.exercises.isEmpty
+        ? null
+        : workout.exercises.last.exerciseName;
+  }
+
+  Future<void> _confirmDiscard(BuildContext context, WidgetRef ref) async {
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Discard workout?'),
+        content: const Text('This will delete the workout in progress.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Discard'),
+          ),
+        ],
+      ),
+    );
+
+    if (discard != true) return;
+    ref.read(restTimerProvider.notifier).stop();
+    await ref.read(activeWorkoutProvider.notifier).discardWorkout();
+  }
+
+  String _formatDuration(int seconds) {
+    final hours = seconds ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    final remainingSeconds = seconds % 60;
+
+    if (hours > 0) return '${hours}h ${minutes}m';
+    if (minutes > 0) return '${minutes}m ${remainingSeconds}s';
+    return '${remainingSeconds}s';
   }
 }
 

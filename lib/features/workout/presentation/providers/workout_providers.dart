@@ -137,6 +137,7 @@ class ActiveWorkoutState {
   final List<ActiveExercise> exercises;
   final bool isActive;
   final int elapsedSeconds;
+  final int elapsedOffsetSeconds;
 
   const ActiveWorkoutState({
     this.workoutId,
@@ -146,6 +147,7 @@ class ActiveWorkoutState {
     this.exercises = const [],
     this.isActive = true,
     this.elapsedSeconds = 0,
+    this.elapsedOffsetSeconds = 0,
   });
 
   ActiveWorkoutState copyWith({
@@ -155,6 +157,7 @@ class ActiveWorkoutState {
     List<ActiveExercise>? exercises,
     bool? isActive,
     int? elapsedSeconds,
+    int? elapsedOffsetSeconds,
   }) {
     return ActiveWorkoutState(
       workoutId: workoutId ?? this.workoutId,
@@ -164,6 +167,7 @@ class ActiveWorkoutState {
       exercises: exercises ?? this.exercises,
       isActive: isActive ?? this.isActive,
       elapsedSeconds: elapsedSeconds ?? this.elapsedSeconds,
+      elapsedOffsetSeconds: elapsedOffsetSeconds ?? this.elapsedOffsetSeconds,
     );
   }
 
@@ -217,10 +221,38 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState?> {
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (state != null) {
         state = state!.copyWith(
-          elapsedSeconds: DateTime.now().difference(state!.startedAt).inSeconds,
+          elapsedSeconds:
+              DateTime.now().difference(state!.startedAt).inSeconds +
+              state!.elapsedOffsetSeconds,
         );
       }
     });
+  }
+
+  /// Rename the active workout.
+  Future<void> updateWorkoutName(String name) async {
+    if (state == null || state!.workoutId == null) return;
+
+    final trimmedName = name.trim();
+    if (trimmedName.isEmpty) return;
+
+    await _workoutDao.updateWorkoutName(state!.workoutId!, trimmedName);
+    state = state!.copyWith(name: trimmedName);
+  }
+
+  /// Manually set the workout duration while the timer keeps running from there.
+  Future<void> updateWorkoutDuration(int seconds) async {
+    if (state == null || state!.workoutId == null) return;
+
+    final safeSeconds = seconds < 0 ? 0 : seconds;
+    final realElapsed = DateTime.now().difference(state!.startedAt).inSeconds;
+    final offset = safeSeconds - realElapsed;
+
+    await _workoutDao.updateWorkoutDuration(state!.workoutId!, safeSeconds);
+    state = state!.copyWith(
+      elapsedSeconds: safeSeconds,
+      elapsedOffsetSeconds: offset,
+    );
   }
 
   /// Add an exercise to the active workout.
@@ -436,10 +468,13 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState?> {
   }
 
   /// Finish the workout.
-  Future<void> finishWorkout() async {
+  Future<void> finishWorkout({int? durationSeconds}) async {
     if (state == null || state!.workoutId == null) return;
 
-    await _workoutDao.finishWorkout(state!.workoutId!);
+    await _workoutDao.finishWorkout(
+      state!.workoutId!,
+      durationSeconds: durationSeconds ?? state!.elapsedSeconds,
+    );
     _timer?.cancel();
     state = null;
   }

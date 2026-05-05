@@ -46,7 +46,7 @@ class AppDatabase extends _$AppDatabase {
   SettingsDao get settingsDao => SettingsDao(this);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration {
@@ -62,6 +62,9 @@ class AppDatabase extends _$AppDatabase {
         if (from < 2) {
           await m.addColumn(exercises, exercises.gifUrl);
           await m.addColumn(exercises, exercises.instructions);
+        }
+        if (from < 3) {
+          await m.addColumn(workouts, workouts.mediaPaths);
         }
       },
     );
@@ -175,7 +178,9 @@ String _inferExerciseType(
 ) {
   final parts = bodyParts.map((p) => p.toLowerCase()).toSet();
   if (parts.contains('cardio')) return 'cardio';
-  if (targetMuscles.length > 1 || secondaryMuscles.isNotEmpty) return 'compound';
+  if (targetMuscles.length > 1 || secondaryMuscles.isNotEmpty) {
+    return 'compound';
+  }
   return 'isolation';
 }
 
