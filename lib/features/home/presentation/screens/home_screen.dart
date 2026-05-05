@@ -13,6 +13,7 @@ import 'package:hevy_app/features/history/presentation/providers/history_provide
 import 'package:hevy_app/features/history/presentation/screens/workout_detail_screen.dart';
 import 'package:hevy_app/features/routines/presentation/providers/routine_providers.dart';
 import 'package:hevy_app/features/routines/presentation/screens/routine_editor_screen.dart';
+import 'package:hevy_app/features/routines/presentation/screens/routines_screen.dart';
 import 'package:hevy_app/features/workout/presentation/providers/workout_providers.dart';
 import 'package:hevy_app/features/workout/presentation/screens/active_workout_screen.dart';
 import 'package:hevy_app/main.dart';
@@ -172,7 +173,7 @@ class HomeScreen extends ConsumerWidget {
 
               const SizedBox(height: 28),
 
-              // ─── Suggested Routines ───────────────────────────
+              // ─── My Routines ──────────────────────────────────
               routinesAsync.when(
                 data: (routines) {
                   if (routines.isEmpty) return const SizedBox.shrink();
@@ -449,6 +450,9 @@ class _TodaysWorkoutCard extends ConsumerWidget {
 
   Future<void> _startRoutine(BuildContext context, WidgetRef ref) async {
     HapticFeedback.mediumImpact();
+    final shouldStart = await _confirmStartRoutine(context, ref);
+    if (!shouldStart) return;
+
     final dao = ref.read(routineDaoProvider);
     final exercises = await dao.getRoutineExercises(routine.id);
     final db = ref.read(databaseProvider);
@@ -470,7 +474,7 @@ class _TodaysWorkoutCard extends ConsumerWidget {
       }
     }
     if (context.mounted) {
-      Navigator.of(context).push(
+      Navigator.of(context, rootNavigator: true).push(
         MaterialPageRoute(
           builder: (_) => const ActiveWorkoutScreen(),
           fullscreenDialog: true,
@@ -478,7 +482,69 @@ class _TodaysWorkoutCard extends ConsumerWidget {
       );
     }
   }
+
+  Future<bool> _confirmStartRoutine(BuildContext context, WidgetRef ref) async {
+    final active = ref.read(activeWorkoutProvider);
+    if (active == null || !active.isActive) return true;
+
+    final choice = await showDialog<_ActiveWorkoutChoice>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surfaceElevated,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        title: const Text('Workout already active'),
+        content: Text(
+          'You already have "${active.name}" in progress. What would you like to do?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(context, _ActiveWorkoutChoice.cancel),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(context, _ActiveWorkoutChoice.resume),
+            child: const Text('Resume Active'),
+          ),
+          ElevatedButton(
+            onPressed: () =>
+                Navigator.pop(context, _ActiveWorkoutChoice.restart),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Start New'),
+          ),
+        ],
+      ),
+    );
+
+    if (!context.mounted) return false;
+    switch (choice) {
+      case _ActiveWorkoutChoice.restart:
+        ref.read(restTimerProvider.notifier).stop();
+        await ref.read(activeWorkoutProvider.notifier).discardWorkout();
+        return true;
+      case _ActiveWorkoutChoice.resume:
+        Navigator.of(context, rootNavigator: true).push(
+          MaterialPageRoute(
+            builder: (_) => const ActiveWorkoutScreen(),
+            fullscreenDialog: true,
+          ),
+        );
+        return false;
+      case _ActiveWorkoutChoice.cancel:
+      case null:
+        return false;
+    }
+  }
 }
+
+enum _ActiveWorkoutChoice { cancel, resume, restart }
 
 // ─── Quick Start Card (no routines) ─────────────────────────
 class _QuickStartCard extends StatelessWidget {
@@ -522,48 +588,134 @@ class _QuickStartCard extends StatelessWidget {
               ],
             ),
           ),
-          InkWell(
-            onTap: () async {
-              HapticFeedback.mediumImpact();
-              await ref.read(activeWorkoutProvider.notifier).startWorkout();
-              if (context.mounted) {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const ActiveWorkoutScreen(),
-                    fullscreenDialog: true,
-                  ),
-                );
-              }
-            },
-            borderRadius: const BorderRadius.vertical(
-              bottom: Radius.circular(8),
-            ),
-            child: Container(
-              width: double.infinity,
-              height: 52,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(8),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.add_rounded, color: Colors.white, size: 22),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'START EMPTY WORKOUT',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
-                      letterSpacing: 1,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 50,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _startEmptyWorkout(context),
+                      icon: const Icon(Icons.add_rounded, size: 20),
+                      label: const Text(
+                        'Empty Workout',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textSecondary,
+                        side: BorderSide(
+                          color: AppColors.border.withValues(alpha: 0.8),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
                     ),
                   ),
-                ],
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: 50,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _createRoutine(context),
+                      icon: const Icon(Icons.playlist_add_rounded, size: 20),
+                      label: const Text(
+                        'Create Routine',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _startEmptyWorkout(BuildContext context) async {
+    HapticFeedback.mediumImpact();
+    await ref.read(activeWorkoutProvider.notifier).startWorkout();
+    if (context.mounted) {
+      Navigator.of(context, rootNavigator: true).push(
+        MaterialPageRoute(
+          builder: (_) => const ActiveWorkoutScreen(),
+          fullscreenDialog: true,
+        ),
+      );
+    }
+  }
+
+  Future<void> _createRoutine(BuildContext context) async {
+    HapticFeedback.mediumImpact();
+    final name = await _showRoutineNameDialog(context);
+    final trimmedName = name?.trim();
+    if (trimmedName == null || trimmedName.isEmpty) return;
+
+    final routineId = await ref
+        .read(routineDaoProvider)
+        .createRoutine(trimmedName);
+
+    if (context.mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => RoutineEditorScreen(routineId: routineId),
+        ),
+      );
+    }
+  }
+
+  Future<String?> _showRoutineNameDialog(BuildContext context) {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surfaceElevated,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        title: const Text('New Routine'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: InputDecoration(
+            hintText: 'Push Day, Legs, Upper Body...',
+            hintStyle: const TextStyle(color: AppColors.textTertiary),
+            filled: true,
+            fillColor: AppColors.surfaceHighlight,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+          ),
+          onSubmitted: (value) => Navigator.pop(context, value),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
+            child: const Text('Create'),
           ),
         ],
       ),
@@ -597,7 +749,7 @@ class _ExerciseChip extends StatelessWidget {
   }
 }
 
-// ─── Suggested Routines Horizontal Scroll ────────────────────
+// ─── My Routines Horizontal Scroll ───────────────────────────
 class _SuggestedRoutinesSection extends ConsumerWidget {
   const _SuggestedRoutinesSection({required this.routines});
   final List<WorkoutTemplate> routines;
@@ -612,25 +764,29 @@ class _SuggestedRoutinesSection extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const _SectionLabel('Suggested Routines'),
-              GestureDetector(
-                onTap: () {},
-                child: Row(
-                  children: [
-                    Text(
-                      'See All',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      size: 16,
-                      color: AppColors.primary,
-                    ),
-                  ],
+              const _SectionLabel('My Routines'),
+              TextButton.icon(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const RoutinesScreen()),
+                ),
+                iconAlignment: IconAlignment.end,
+                label: Text(
+                  'See All',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                icon: Icon(
+                  Icons.chevron_right_rounded,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  minimumSize: const Size(0, 32),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ),
             ],
@@ -638,17 +794,85 @@ class _SuggestedRoutinesSection extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 160,
+          height: 176,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: routines.length,
+            itemCount: routines.length + 1,
             separatorBuilder: (_, _) => const SizedBox(width: 12),
-            itemBuilder: (context, index) =>
-                _RoutineCard(routine: routines[index]),
+            itemBuilder: (context, index) {
+              if (index == routines.length) {
+                return _ManageRoutinesCard(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const RoutinesScreen()),
+                  ),
+                );
+              }
+              return _RoutineCard(routine: routines[index]);
+            },
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ManageRoutinesCard extends StatelessWidget {
+  const _ManageRoutinesCard({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: 160,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.65)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.playlist_add_rounded,
+                color: AppColors.primary,
+                size: 22,
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Manage Routines',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Add, edit, delete',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -689,7 +913,7 @@ class _RoutineCard extends ConsumerWidget {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: color.withValues(alpha: 0.24)),
         ),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -31,7 +31,9 @@ class RoutinesScreen extends ConsumerWidget {
               titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
               title: Text(
                 'Routines',
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 28),
+                style: Theme.of(
+                  context,
+                ).textTheme.headlineLarge?.copyWith(fontSize: 28),
               ),
               background: Container(
                 decoration: BoxDecoration(
@@ -57,7 +59,11 @@ class RoutinesScreen extends ConsumerWidget {
                       color: AppColors.primary,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
+                    child: const Icon(
+                      Icons.add_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                   ),
                   onPressed: () => _createRoutine(context, ref),
                 ),
@@ -68,11 +74,18 @@ class RoutinesScreen extends ConsumerWidget {
           routinesAsync.when(
             data: (routines) {
               if (routines.isEmpty) {
-                return SliverFillRemaining(child: _EmptyRoutinesState(onTap: () => _createRoutine(context, ref)));
+                return SliverFillRemaining(
+                  child: _EmptyRoutinesState(
+                    onTap: () => _createRoutine(context, ref),
+                  ),
+                );
               }
 
               return SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) => _RoutineCard(routine: routines[index]),
@@ -81,8 +94,11 @@ class RoutinesScreen extends ConsumerWidget {
                 ),
               );
             },
-            loading: () => const SliverFillRemaining(child: Center(child: CircularProgressIndicator())),
-            error: (e, _) => SliverFillRemaining(child: Center(child: Text('Error: $e'))),
+            loading: () => const SliverFillRemaining(
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (e, _) =>
+                SliverFillRemaining(child: Center(child: Text('Error: $e'))),
           ),
         ],
       ),
@@ -125,7 +141,10 @@ class RoutinesScreen extends ConsumerWidget {
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
           ),
           onSubmitted: (value) => Navigator.pop(context, value),
         ),
@@ -137,7 +156,9 @@ class RoutinesScreen extends ConsumerWidget {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, controller.text),
             style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: const Text('Create'),
           ),
@@ -174,9 +195,9 @@ class _EmptyRoutinesState extends StatelessWidget {
             const SizedBox(height: 24),
             Text(
               'Build Your First Routine',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
             Text(
@@ -191,9 +212,14 @@ class _EmptyRoutinesState extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: onTap,
                 icon: const Icon(Icons.add_rounded),
-                label: const Text('Create Routine', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                label: const Text(
+                  'Create Routine',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
                 style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
             ),
@@ -255,7 +281,11 @@ class _RoutineCard extends ConsumerWidget {
                       color: AppColors.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.fitness_center_rounded, color: AppColors.primary, size: 22),
+                    child: const Icon(
+                      Icons.fitness_center_rounded,
+                      color: AppColors.primary,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -274,38 +304,57 @@ class _RoutineCard extends ConsumerWidget {
                         detailAsync.when(
                           data: (detail) {
                             if (detail.exercises.isEmpty) {
-                              return const Text('No exercises added', style: TextStyle(fontSize: 13, color: AppColors.textTertiary));
+                              return const Text(
+                                'No exercises added',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.textTertiary,
+                                ),
+                              );
                             }
                             return Text(
                               '${detail.exercises.length} exercises · ${detail.exercises.map((e) => e.exercise.name).join(', ')}',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
+                              ),
                             );
                           },
                           loading: () => const SizedBox(height: 16),
-                          error: (_, __) => const SizedBox(height: 16),
+                          error: (_, stackTrace) => const SizedBox(height: 16),
                         ),
                       ],
                     ),
                   ),
                   PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert_rounded, color: AppColors.textTertiary, size: 20),
+                    icon: const Icon(
+                      Icons.more_vert_rounded,
+                      color: AppColors.textTertiary,
+                      size: 20,
+                    ),
                     color: AppColors.surfaceElevated,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     onSelected: (value) async {
                       if (value == 'edit') {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) => RoutineEditorScreen(routineId: routine.id),
+                            builder: (_) =>
+                                RoutineEditorScreen(routineId: routine.id),
                           ),
                         );
                       } else if (value == 'duplicate') {
-                        final newId = await ref.read(routineDaoProvider).duplicateRoutine(routine.id);
+                        final newId = await ref
+                            .read(routineDaoProvider)
+                            .duplicateRoutine(routine.id);
                         if (context.mounted) {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (_) => RoutineEditorScreen(routineId: newId),
+                              builder: (_) =>
+                                  RoutineEditorScreen(routineId: newId),
                             ),
                           );
                         }
@@ -314,21 +363,32 @@ class _RoutineCard extends ConsumerWidget {
                           context: context,
                           builder: (ctx) => AlertDialog(
                             backgroundColor: AppColors.surfaceElevated,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                             title: const Text('Delete Routine?'),
-                            content: Text('Are you sure you want to delete "${routine.name}"? This cannot be undone.'),
+                            content: Text(
+                              'Are you sure you want to delete "${routine.name}"? This cannot be undone.',
+                            ),
                             actions: [
-                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: const Text('Cancel'),
+                              ),
                               TextButton(
                                 onPressed: () => Navigator.pop(ctx, true),
-                                style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: AppColors.error,
+                                ),
                                 child: const Text('Delete'),
                               ),
                             ],
                           ),
                         );
                         if (confirm == true) {
-                          ref.read(routineDaoProvider).deleteRoutine(routine.id);
+                          ref
+                              .read(routineDaoProvider)
+                              .deleteRoutine(routine.id);
                         }
                       }
                     },
@@ -337,7 +397,11 @@ class _RoutineCard extends ConsumerWidget {
                         value: 'edit',
                         child: Row(
                           children: [
-                            Icon(Icons.edit_rounded, color: AppColors.textSecondary, size: 18),
+                            Icon(
+                              Icons.edit_rounded,
+                              color: AppColors.textSecondary,
+                              size: 18,
+                            ),
                             SizedBox(width: 8),
                             Text('Edit'),
                           ],
@@ -347,7 +411,11 @@ class _RoutineCard extends ConsumerWidget {
                         value: 'duplicate',
                         child: Row(
                           children: [
-                            Icon(Icons.copy_rounded, color: AppColors.textSecondary, size: 18),
+                            Icon(
+                              Icons.copy_rounded,
+                              color: AppColors.textSecondary,
+                              size: 18,
+                            ),
                             SizedBox(width: 8),
                             Text('Duplicate'),
                           ],
@@ -357,9 +425,16 @@ class _RoutineCard extends ConsumerWidget {
                         value: 'delete',
                         child: Row(
                           children: [
-                            Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 18),
+                            Icon(
+                              Icons.delete_outline_rounded,
+                              color: AppColors.error,
+                              size: 18,
+                            ),
                             SizedBox(width: 8),
-                            Text('Delete', style: TextStyle(color: AppColors.error)),
+                            Text(
+                              'Delete',
+                              style: TextStyle(color: AppColors.error),
+                            ),
                           ],
                         ),
                       ),
@@ -375,14 +450,19 @@ class _RoutineCard extends ConsumerWidget {
                 child: ElevatedButton.icon(
                   onPressed: () => _startFromRoutine(context, ref),
                   icon: const Icon(Icons.play_arrow_rounded, size: 22),
-                  label: const Text('Start Workout', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                  label: const Text(
+                    'Start Workout',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary.withValues(alpha: 0.15),
                     foregroundColor: AppColors.primary,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
-                      side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
+                      side: BorderSide(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                      ),
                     ),
                   ),
                 ),
@@ -395,31 +475,40 @@ class _RoutineCard extends ConsumerWidget {
   }
 
   Future<void> _startFromRoutine(BuildContext context, WidgetRef ref) async {
+    final shouldStart = await _confirmStartRoutine(context, ref);
+    if (!shouldStart) return;
+
     final dao = ref.read(routineDaoProvider);
     final exercises = await dao.getRoutineExercises(routine.id);
     final db = ref.read(databaseProvider);
 
     // Start workout from template.
-    await ref.read(activeWorkoutProvider.notifier).startWorkout(
-          name: routine.name,
-          templateId: routine.id,
-        );
+    await ref
+        .read(activeWorkoutProvider.notifier)
+        .startWorkout(name: routine.name, templateId: routine.id);
 
     // Add each exercise from the template.
     for (final re in exercises) {
       final exercise = await db.exerciseDao.getById(re.exercise.id);
-      await ref.read(activeWorkoutProvider.notifier).addExercise(exercise, supersetGroupId: re.templateExercise.supersetGroupId);
+      await ref
+          .read(activeWorkoutProvider.notifier)
+          .addExercise(
+            exercise,
+            supersetGroupId: re.templateExercise.supersetGroupId,
+          );
 
       // Add additional sets based on template target.
       final currentExerciseIndex =
           ref.read(activeWorkoutProvider)!.exercises.length - 1;
       for (int i = 1; i < re.templateExercise.targetSets; i++) {
-        await ref.read(activeWorkoutProvider.notifier).addSet(currentExerciseIndex);
+        await ref
+            .read(activeWorkoutProvider.notifier)
+            .addSet(currentExerciseIndex);
       }
     }
 
     if (context.mounted) {
-      Navigator.of(context).push(
+      Navigator.of(context, rootNavigator: true).push(
         MaterialPageRoute(
           builder: (_) => const ActiveWorkoutScreen(),
           fullscreenDialog: true,
@@ -427,4 +516,66 @@ class _RoutineCard extends ConsumerWidget {
       );
     }
   }
+
+  Future<bool> _confirmStartRoutine(BuildContext context, WidgetRef ref) async {
+    final active = ref.read(activeWorkoutProvider);
+    if (active == null || !active.isActive) return true;
+
+    final choice = await showDialog<_ActiveWorkoutChoice>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surfaceElevated,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        title: const Text('Workout already active'),
+        content: Text(
+          'You already have "${active.name}" in progress. What would you like to do?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(context, _ActiveWorkoutChoice.cancel),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(context, _ActiveWorkoutChoice.resume),
+            child: const Text('Resume Active'),
+          ),
+          ElevatedButton(
+            onPressed: () =>
+                Navigator.pop(context, _ActiveWorkoutChoice.restart),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Start New'),
+          ),
+        ],
+      ),
+    );
+
+    if (!context.mounted) return false;
+    switch (choice) {
+      case _ActiveWorkoutChoice.restart:
+        ref.read(restTimerProvider.notifier).stop();
+        await ref.read(activeWorkoutProvider.notifier).discardWorkout();
+        return true;
+      case _ActiveWorkoutChoice.resume:
+        Navigator.of(context, rootNavigator: true).push(
+          MaterialPageRoute(
+            builder: (_) => const ActiveWorkoutScreen(),
+            fullscreenDialog: true,
+          ),
+        );
+        return false;
+      case _ActiveWorkoutChoice.cancel:
+      case null:
+        return false;
+    }
+  }
 }
+
+enum _ActiveWorkoutChoice { cancel, resume, restart }

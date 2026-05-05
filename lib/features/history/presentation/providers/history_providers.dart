@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:drift/drift.dart' show Variable;
 
 import 'package:hevy_app/core/database/app_database.dart';
+import 'package:hevy_app/main.dart';
 
 import 'package:hevy_app/features/workout/presentation/providers/workout_providers.dart';
 
@@ -32,6 +34,22 @@ final workoutDetailProvider = FutureProvider.family<WorkoutDetailData, int>((
   }
 
   return WorkoutDetailData(workout: workout, exercises: exerciseDetails);
+});
+
+/// Count new personal records achieved in a workout.
+final workoutRecordCountProvider = FutureProvider.family<int, int>((
+  ref,
+  workoutId,
+) async {
+  final db = ref.watch(databaseProvider);
+  final row = await db
+      .customSelect(
+        'SELECT COUNT(*) AS count FROM personal_records WHERE workout_id = ?',
+        variables: [Variable.withInt(workoutId)],
+        readsFrom: {db.personalRecords},
+      )
+      .getSingle();
+  return row.read<int>('count');
 });
 
 class WorkoutDetailData {

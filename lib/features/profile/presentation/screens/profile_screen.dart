@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:hevy_app/app/theme/colors.dart';
 import 'package:hevy_app/core/providers/unit_providers.dart';
+import 'package:hevy_app/features/exercises/presentation/screens/exercise_detail_screen.dart';
 
 import '../providers/profile_providers.dart';
 import 'settings_screen.dart';
@@ -34,178 +35,242 @@ class ProfileScreen extends ConsumerWidget {
         child: SafeArea(
           bottom: false,
           child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
-          children: [
-            // ─── Header ───────────────────────────────────
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Profile',
-                  style: GoogleFonts.lexend(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0,
-                  ),
-                ),
-                IconButton(
-                  icon: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceElevated,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
+            children: [
+              // ─── Header ───────────────────────────────────
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Profile',
+                    style: GoogleFonts.lexend(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0,
                     ),
-                    child: const Icon(Icons.settings_rounded, size: 20, color: AppColors.textSecondary),
                   ),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                    );
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // ─── Stats Row ────────────────────────────────
-            Row(
-              children: [
-                Expanded(
-                  child: _GlassStatCard(
-                    value: workoutCountAsync.when(
-                      data: (c) => '$c',
-                      loading: () => '-',
-                      error: (_, __) => '-',
-                    ),
-                    label: 'Workouts',
-                    icon: Icons.fitness_center_rounded,
-                    color: AppColors.primary,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _GlassStatCard(
-                    value: prsAsync.when(
-                      data: (prs) => '${prs.length}',
-                      loading: () => '-',
-                      error: (_, __) => '-',
-                    ),
-                    label: 'Records',
-                    icon: Icons.emoji_events_rounded,
-                    color: AppColors.warning,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 32),
-
-            // ─── Personal Records ─────────────────────────
-            const Text(
-              'PERSONAL RECORDS',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textTertiary,
-                letterSpacing: 1.5,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            prsAsync.when(
-              data: (prs) {
-                if (prs.isEmpty) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.border.withValues(alpha: 0.58)),
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(Icons.emoji_events_rounded, size: 36, color: AppColors.textTertiary.withValues(alpha: 0.4)),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Complete workouts to see your PRs here.',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          textAlign: TextAlign.center,
+                  IconButton(
+                    icon: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceElevated,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: AppColors.border.withValues(alpha: 0.6),
                         ),
-                      ],
+                      ),
+                      child: const Icon(
+                        Icons.settings_rounded,
+                        size: 20,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                  );
-                }
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const SettingsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
 
-                return Column(
-                  children: prs.map((prEntry) {
+              // ─── Stats Row ────────────────────────────────
+              Row(
+                children: [
+                  Expanded(
+                    child: _GlassStatCard(
+                      value: workoutCountAsync.when(
+                        data: (c) => '$c',
+                        loading: () => '-',
+                        error: (_, _) => '-',
+                      ),
+                      label: 'Workouts',
+                      icon: Icons.fitness_center_rounded,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _GlassStatCard(
+                      value: prsAsync.when(
+                        data: (prs) => '${prs.length}',
+                        loading: () => '-',
+                        error: (_, _) => '-',
+                      ),
+                      label: 'Records',
+                      icon: Icons.emoji_events_rounded,
+                      color: AppColors.warning,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 32),
+
+              // ─── Personal Records ─────────────────────────
+              const Text(
+                'PERSONAL RECORDS',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textTertiary,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              prsAsync.when(
+                data: (prs) {
+                  if (prs.isEmpty) {
                     return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 32,
+                        horizontal: 20,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.border.withValues(alpha: 0.58)),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(14),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: AppColors.warning.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(Icons.emoji_events_rounded, color: AppColors.warning, size: 22),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    prEntry.exercise.name,
-                                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'Best: ${prEntry.pr.value.toStringAsFixed(1)} ${ref.watch(unitLabelProvider)}',
-                                    style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: AppColors.warning.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.emoji_events_rounded, color: AppColors.warning, size: 13),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    'PR',
-                                    style: TextStyle(color: AppColors.warning, fontWeight: FontWeight.w700, fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                        border: Border.all(
+                          color: AppColors.border.withValues(alpha: 0.58),
                         ),
                       ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.emoji_events_rounded,
+                            size: 36,
+                            color: AppColors.textTertiary.withValues(
+                              alpha: 0.4,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Complete workouts to see your PRs here.',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
                     );
-                  }).toList(),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
-            ),
-          ],
+                  }
+
+                  return Column(
+                    children: prs.map((prEntry) {
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppColors.border.withValues(alpha: 0.58),
+                          ),
+                        ),
+                        child: InkWell(
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ExerciseDetailScreen(
+                                exercise: prEntry.exercise,
+                              ),
+                            ),
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.warning.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(
+                                    Icons.emoji_events_rounded,
+                                    color: AppColors.warning,
+                                    size: 22,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        prEntry.exercise.name,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Best: ${prEntry.pr.value.toStringAsFixed(1)} ${ref.watch(unitLabelProvider)}',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.warning.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.emoji_events_rounded,
+                                        color: AppColors.warning,
+                                        size: 13,
+                                      ),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        'PR',
+                                        style: TextStyle(
+                                          color: AppColors.warning,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                const Icon(
+                                  Icons.info_outline_rounded,
+                                  color: AppColors.textTertiary,
+                                  size: 16,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(child: Text('Error: $e')),
+              ),
+            ],
           ),
         ),
       ),
@@ -259,7 +324,11 @@ class _GlassStatCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(fontSize: 12, color: AppColors.textTertiary, fontWeight: FontWeight.w500),
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textTertiary,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-
 import 'package:hevy_app/app/theme/colors.dart';
 import 'package:hevy_app/core/providers/unit_providers.dart';
+import 'package:hevy_app/features/exercises/presentation/screens/exercise_detail_screen.dart';
 import 'package:hevy_app/features/history/presentation/providers/history_providers.dart';
 import 'package:hevy_app/features/profile/presentation/providers/profile_providers.dart';
 
@@ -35,163 +35,241 @@ class AnalyticsScreen extends ConsumerWidget {
         child: SafeArea(
           bottom: false,
           child: historyAsync.when(
-          data: (workouts) {
-            // Compute stats
-            final now = DateTime.now();
-            final thisWeek = workouts.where((w) => now.difference(w.startedAt).inDays <= 7).length;
-            final last30 = workouts.where((w) => now.difference(w.startedAt).inDays <= 30).toList();
+            data: (workouts) {
+              // Compute stats
+              final now = DateTime.now();
+              final thisWeek = workouts
+                  .where((w) => now.difference(w.startedAt).inDays <= 7)
+                  .length;
+              final last30 = workouts
+                  .where((w) => now.difference(w.startedAt).inDays <= 30)
+                  .toList();
 
-            // Volume per weekday (last 30 days)
-            final weekdayVolumes = List<double>.filled(7, 0);
-            for (final w in last30) {
-              final wd = w.startedAt.weekday - 1; // 0=Mon
-              weekdayVolumes[wd] += w.durationSeconds / 60.0; // use duration as proxy
-            }
+              // Volume per weekday (last 30 days)
+              final weekdayVolumes = List<double>.filled(7, 0);
+              for (final w in last30) {
+                final wd = w.startedAt.weekday - 1; // 0=Mon
+                weekdayVolumes[wd] +=
+                    w.durationSeconds / 60.0; // use duration as proxy
+              }
 
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
-              children: [
-                // ─── Header ─────────────────────────────────
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Analytics',
-                      style: GoogleFonts.lexend(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                        letterSpacing: 0,
-                      ),
-                    ),
-                    Text(
-                      'Last 30 Days',
-                      style: const TextStyle(fontSize: 12, color: AppColors.textTertiary),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                // ─── Stat Cards Bento Grid ───────────────────
-                IntrinsicHeight(
-                  child: Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: _StatCard(
-                        label: 'Total Volume',
-                        icon: Icons.scale_rounded,
-                        value: _totalVolumeLabel(last30),
-                        unit: unitLabel,
-                        trend: last30.isNotEmpty ? '+${last30.length * 2}%' : null,
-                        trendUp: true,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _StatCard(
-                        label: 'New PRs',
-                        icon: Icons.emoji_events_rounded,
-                        value: prsAsync.valueOrNull?.length.toString() ?? '-',
-                        unit: null,
-                        subtext: 'all time',
-                        color: AppColors.accent,
-                      ),
-                    ),
-                  ],
-                ),
-                ),
-                const SizedBox(height: 10),
-                _StatCard(
-                  label: 'Workouts',
-                  icon: Icons.calendar_month_rounded,
-                  value: '$thisWeek',
-                  unit: null,
-                  subtext: 'this week',
-                  color: AppColors.primary,
-                  horizontal: true,
-                  totalThisMonth: last30.length,
-                ),
-
-                const SizedBox(height: 24),
-
-                // ─── Weekly Frequency Bar Chart ──────────────
-                _ChartCard(
-                  title: 'Weekly Frequency',
-                  child: _WeeklyBarChart(weekdayVolumes: weekdayVolumes),
-                ),
-
-                const SizedBox(height: 16),
-
-                // ─── Volume by Muscle Group ──────────────────
-                _ChartCard(
-                  title: 'Volume Focus',
-                  subtitle: 'By muscle group',
-                  child: _MuscleGroupBars(workouts: last30, unitLabel: unitLabel),
-                ),
-
-                const SizedBox(height: 16),
-
-                // ─── Personal Records List ────────────────────
-                _ChartCard(
-                  title: 'Personal Records',
-                  child: prsAsync.when(
-                    data: (prs) {
-                      if (prs.isEmpty) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 24),
-                          child: Center(
-                            child: Column(
-                              children: [
-                                Icon(Icons.emoji_events_outlined, size: 40, color: AppColors.textTertiary.withValues(alpha: 0.4)),
-                                const SizedBox(height: 12),
-                                const Text('No PRs yet — keep lifting!', style: TextStyle(color: AppColors.textTertiary, fontSize: 13)),
-                              ],
-                            ),
+              return ListView(
+                padding: const EdgeInsets.fromLTRB(18, 16, 18, 120),
+                children: [
+                  // ─── Header ─────────────────────────────────
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Analytics',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.lexend(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                            letterSpacing: 0,
                           ),
-                        );
-                      }
-                      return Column(
-                        children: prs.take(5).map((pr) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: AppColors.warning.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(Icons.emoji_events_rounded, color: AppColors.warning, size: 18),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(pr.exercise.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                              ),
-                              Text(
-                                '${pr.pr.value.toStringAsFixed(1)} $unitLabel',
-                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.warning),
-                              ),
-                            ],
-                          ),
-                        )).toList(),
-                      );
-                    },
-                    loading: () => const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator())),
-                    error: (e, _) => Text('Error: $e'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Last 30 Days',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Error: $e')),
+
+                  const SizedBox(height: 24),
+
+                  // ─── Stat Cards Bento Grid ───────────────────
+                  IntrinsicHeight(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: _StatCard(
+                            label: 'Total Volume',
+                            icon: Icons.scale_rounded,
+                            value: _totalVolumeLabel(last30),
+                            unit: unitLabel,
+                            trend: last30.isNotEmpty
+                                ? '+${last30.length * 2}%'
+                                : null,
+                            trendUp: true,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _StatCard(
+                            label: 'New PRs',
+                            icon: Icons.emoji_events_rounded,
+                            value:
+                                prsAsync.valueOrNull?.length.toString() ?? '-',
+                            unit: null,
+                            subtext: 'all time',
+                            color: AppColors.accent,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _StatCard(
+                    label: 'Workouts',
+                    icon: Icons.calendar_month_rounded,
+                    value: '$thisWeek',
+                    unit: null,
+                    subtext: 'this week',
+                    color: AppColors.primary,
+                    horizontal: true,
+                    totalThisMonth: last30.length,
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ─── Weekly Frequency Bar Chart ──────────────
+                  _ChartCard(
+                    title: 'Weekly Frequency',
+                    child: _WeeklyBarChart(weekdayVolumes: weekdayVolumes),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // ─── Volume by Muscle Group ──────────────────
+                  _ChartCard(
+                    title: 'Volume Focus',
+                    subtitle: 'By muscle group',
+                    child: _MuscleGroupBars(
+                      workouts: last30,
+                      unitLabel: unitLabel,
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // ─── Personal Records List ────────────────────
+                  _ChartCard(
+                    title: 'Personal Records',
+                    child: prsAsync.when(
+                      data: (prs) {
+                        if (prs.isEmpty) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            child: Center(
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.emoji_events_outlined,
+                                    size: 40,
+                                    color: AppColors.textTertiary.withValues(
+                                      alpha: 0.4,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  const Text(
+                                    'No PRs yet — keep lifting!',
+                                    style: TextStyle(
+                                      color: AppColors.textTertiary,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+                        return Column(
+                          children: prs
+                              .take(5)
+                              .map(
+                                (pr) => Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
+                                  child: InkWell(
+                                    onTap: () => Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => ExerciseDetailScreen(
+                                          exercise: pr.exercise,
+                                        ),
+                                      ),
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 36,
+                                          height: 36,
+                                          decoration: BoxDecoration(
+                                            color: AppColors.warning.withValues(
+                                              alpha: 0.1,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                          child: const Icon(
+                                            Icons.emoji_events_rounded,
+                                            color: AppColors.warning,
+                                            size: 18,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            pr.exercise.name,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                        Text(
+                                          '${pr.pr.value.toStringAsFixed(1)} $unitLabel',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 14,
+                                            color: AppColors.warning,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        const Icon(
+                                          Icons.info_outline_rounded,
+                                          color: AppColors.textTertiary,
+                                          size: 16,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        );
+                      },
+                      loading: () => const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(24),
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+                      error: (e, _) => Text('Error: $e'),
+                    ),
+                  ),
+                ],
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(child: Text('Error: $e')),
+          ),
         ),
-      ),
       ),
     );
   }
@@ -257,14 +335,36 @@ class _StatCard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label.toUpperCase(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textTertiary, letterSpacing: 1)),
+                Text(
+                  label.toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textTertiary,
+                    letterSpacing: 1,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Text(value, style: GoogleFonts.lexend(fontSize: 32, fontWeight: FontWeight.w700, color: color, height: 1)),
+                    Text(
+                      value,
+                      style: GoogleFonts.lexend(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w700,
+                        color: color,
+                        height: 1,
+                      ),
+                    ),
                     if (subtext != null) ...[
                       const SizedBox(width: 6),
-                      Text(subtext!, style: const TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+                      Text(
+                        subtext!,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -275,8 +375,22 @@ class _StatCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('$totalThisMonth', style: GoogleFonts.lexend(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textSecondary, height: 1)),
-                  const Text('this month', style: TextStyle(fontSize: 11, color: AppColors.textTertiary)),
+                  Text(
+                    '$totalThisMonth',
+                    style: GoogleFonts.lexend(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textSecondary,
+                      height: 1,
+                    ),
+                  ),
+                  const Text(
+                    'this month',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
                 ],
               ),
           ],
@@ -285,8 +399,8 @@ class _StatCard extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(16),
-      constraints: const BoxConstraints(minHeight: 140),
+      padding: const EdgeInsets.all(12),
+      constraints: const BoxConstraints(minHeight: 132),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -304,33 +418,97 @@ class _StatCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(label.toUpperCase(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textTertiary, letterSpacing: 1)),
-              Icon(icon, color: AppColors.textTertiary, size: 18),
+              Expanded(
+                child: Text(
+                  label.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textTertiary,
+                    letterSpacing: 0.7,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Icon(icon, color: AppColors.textTertiary, size: 16),
             ],
           ),
           const Spacer(),
-          RichText(
-            text: TextSpan(children: [
-              TextSpan(text: value, style: GoogleFonts.lexend(fontSize: 40, fontWeight: FontWeight.w700, color: color, height: 1)),
-              if (unit != null)
-                TextSpan(text: ' $unit', style: TextStyle(fontSize: 16, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
-            ]),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: RichText(
+              maxLines: 1,
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: value,
+                    style: GoogleFonts.lexend(
+                      fontSize: 38,
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                      height: 1,
+                    ),
+                  ),
+                  if (unit != null) const TextSpan(text: ' '),
+                  if (unit != null)
+                    TextSpan(
+                      text: unit,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 6),
           if (trend != null)
             Row(
               children: [
-                Icon(trendUp ? Icons.trending_up_rounded : Icons.trending_down_rounded, size: 14, color: AppColors.accent),
+                Icon(
+                  trendUp
+                      ? Icons.trending_up_rounded
+                      : Icons.trending_down_rounded,
+                  size: 14,
+                  color: AppColors.accent,
+                ),
                 const SizedBox(width: 4),
-                Text(trend!, style: TextStyle(fontSize: 12, color: AppColors.accent, fontWeight: FontWeight.w600)),
+                Text(
+                  trend!,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.accent,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(width: 4),
-                const Text('from last month', style: TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+                const Flexible(
+                  child: Text(
+                    'from last month',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                ),
               ],
             ),
           if (subtext != null)
-            Text(subtext!, style: const TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+            Text(
+              subtext!,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textTertiary,
+              ),
+            ),
         ],
       ),
     );
@@ -353,10 +531,7 @@ class _ChartCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.surfaceElevated,
-            AppColors.surface,
-          ],
+          colors: [AppColors.surfaceElevated, AppColors.surface],
         ),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
@@ -366,11 +541,21 @@ class _ChartCard extends StatelessWidget {
         children: [
           Text(
             title,
-            style: GoogleFonts.lexend(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+            style: GoogleFonts.lexend(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 2),
-            Text(subtitle!, style: const TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+            Text(
+              subtitle!,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textTertiary,
+              ),
+            ),
           ],
           const SizedBox(height: 20),
           child,
@@ -389,7 +574,11 @@ class _WeeklyBarChart extends StatelessWidget {
   Widget build(BuildContext context) {
     const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
     final today = (DateTime.now().weekday - 1) % 7;
-    final maxVol = weekdayVolumes.isEmpty ? 1.0 : (weekdayVolumes.reduce((a, b) => a > b ? a : b)).clamp(1.0, double.infinity);
+    final maxVol = weekdayVolumes.isEmpty
+        ? 1.0
+        : (weekdayVolumes.reduce(
+            (a, b) => a > b ? a : b,
+          )).clamp(1.0, double.infinity);
 
     return SizedBox(
       height: 120,
@@ -413,9 +602,11 @@ class _WeeklyBarChart extends StatelessWidget {
                       color: isToday
                           ? AppColors.primary
                           : hasData
-                              ? AppColors.primary.withValues(alpha: 0.35)
-                              : AppColors.surfaceHighlight,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                          ? AppColors.primary.withValues(alpha: 0.35)
+                          : AppColors.surfaceHighlight,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(4),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -424,7 +615,9 @@ class _WeeklyBarChart extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
-                      color: isToday ? AppColors.textPrimary : AppColors.textTertiary,
+                      color: isToday
+                          ? AppColors.textPrimary
+                          : AppColors.textTertiary,
                     ),
                   ),
                 ],
@@ -463,8 +656,21 @@ class _MuscleGroupBars extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(g.$1, style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w500)),
-                  Text('${(g.$2 * 100).toInt()}%', style: const TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+                  Text(
+                    g.$1,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    '${(g.$2 * 100).toInt()}%',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 6),

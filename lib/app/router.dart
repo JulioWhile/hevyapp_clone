@@ -117,7 +117,7 @@ class _AppShell extends ConsumerWidget {
     HapticFeedback.mediumImpact();
     final active = ref.read(activeWorkoutProvider);
     if (active != null && active.isActive) {
-      Navigator.of(context).push(
+      Navigator.of(context, rootNavigator: true).push(
         MaterialPageRoute(
           builder: (_) => const ActiveWorkoutScreen(),
           fullscreenDialog: true,
@@ -127,7 +127,7 @@ class _AppShell extends ConsumerWidget {
     }
     await ref.read(activeWorkoutProvider.notifier).startWorkout();
     if (context.mounted) {
-      Navigator.of(context).push(
+      Navigator.of(context, rootNavigator: true).push(
         MaterialPageRoute(
           builder: (_) => const ActiveWorkoutScreen(),
           fullscreenDialog: true,
@@ -149,7 +149,7 @@ class _ActiveWorkoutDock extends ConsumerWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => Navigator.of(context).push(
+        onTap: () => Navigator.of(context, rootNavigator: true).push(
           MaterialPageRoute(
             builder: (_) => const ActiveWorkoutScreen(),
             fullscreenDialog: true,
@@ -277,74 +277,76 @@ class _GlassNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                AppColors.surface.withValues(alpha: 0.9),
-                AppColors.background.withValues(alpha: 0.94),
-              ],
-            ),
-            border: Border(
-              top: BorderSide(
-                color: AppColors.primary.withValues(alpha: 0.16),
-                width: 0.5,
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.bottomCenter,
+      children: [
+        ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    AppColors.surface.withValues(alpha: 0.9),
+                    AppColors.background.withValues(alpha: 0.94),
+                  ],
+                ),
+                border: Border(
+                  top: BorderSide(
+                    color: AppColors.primary.withValues(alpha: 0.16),
+                    width: 0.5,
+                  ),
+                ),
               ),
-            ),
-          ),
-          child: SafeArea(
-            top: false,
-            child: SizedBox(
-              height: 60,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // 0 — Home
-                  _NavItem(
-                    icon: Icons.dashboard_outlined,
-                    selectedIcon: Icons.dashboard_rounded,
-                    label: 'Home',
-                    isSelected: currentIndex == 0,
-                    onTap: () => onTap(0),
+              child: SafeArea(
+                top: false,
+                child: SizedBox(
+                  height: 60,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      _NavItem(
+                        icon: Icons.dashboard_outlined,
+                        selectedIcon: Icons.dashboard_rounded,
+                        label: 'Home',
+                        isSelected: currentIndex == 0,
+                        onTap: () => onTap(0),
+                      ),
+                      _NavItem(
+                        icon: Icons.insights_outlined,
+                        selectedIcon: Icons.insights_rounded,
+                        label: 'Progress',
+                        isSelected: currentIndex == 1,
+                        onTap: () => onTap(1),
+                      ),
+                      const SizedBox(width: 64),
+                      _NavItem(
+                        icon: Icons.history_outlined,
+                        selectedIcon: Icons.history_rounded,
+                        label: 'History',
+                        isSelected: currentIndex == 2,
+                        onTap: () => onTap(2),
+                      ),
+                      _NavItem(
+                        icon: Icons.person_outline_rounded,
+                        selectedIcon: Icons.person_rounded,
+                        label: 'Profile',
+                        isSelected: currentIndex == 3,
+                        onTap: () => onTap(3),
+                      ),
+                    ],
                   ),
-                  // 1 — Progress
-                  _NavItem(
-                    icon: Icons.insights_outlined,
-                    selectedIcon: Icons.insights_rounded,
-                    label: 'Progress',
-                    isSelected: currentIndex == 1,
-                    onTap: () => onTap(1),
-                  ),
-                  // Center FAB — workout launcher (not a tab)
-                  _CenterFab(onTap: () => onTap(-1)),
-                  // 2 — History
-                  _NavItem(
-                    icon: Icons.history_outlined,
-                    selectedIcon: Icons.history_rounded,
-                    label: 'History',
-                    isSelected: currentIndex == 2,
-                    onTap: () => onTap(2),
-                  ),
-                  // 3 — Profile
-                  _NavItem(
-                    icon: Icons.person_outline_rounded,
-                    selectedIcon: Icons.person_rounded,
-                    label: 'Profile',
-                    isSelected: currentIndex == 3,
-                    onTap: () => onTap(3),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
         ),
-      ),
+        Positioned(top: -28, child: _CenterFab(onTap: () => onTap(-1))),
+      ],
     );
   }
 }
@@ -358,30 +360,27 @@ class _CenterFab extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Transform.translate(
-        offset: const Offset(0, -10),
-        child: Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppColors.primaryVariant, AppColors.primary],
-            ),
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white24, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.45),
-                blurRadius: 20,
-                spreadRadius: 0,
-                offset: const Offset(0, 6),
-              ),
-            ],
+      child: Container(
+        width: 62,
+        height: 62,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.primaryVariant, AppColors.primary],
           ),
-          child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white24, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.45),
+              blurRadius: 20,
+              spreadRadius: 0,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
+        child: const Icon(Icons.add_rounded, color: Colors.white, size: 34),
       ),
     );
   }

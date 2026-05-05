@@ -8,6 +8,8 @@ import 'package:hevy_app/app/theme/colors.dart';
 import 'package:hevy_app/core/constants/app_constants.dart';
 import 'package:hevy_app/core/database/app_database.dart';
 import 'package:hevy_app/core/providers/unit_providers.dart';
+import 'package:hevy_app/features/exercises/presentation/providers/exercise_providers.dart';
+import 'package:hevy_app/features/exercises/presentation/screens/exercise_detail_screen.dart';
 import '../providers/workout_providers.dart';
 import '../widgets/exercise_picker_sheet.dart';
 import '../widgets/set_row.dart';
@@ -22,6 +24,11 @@ class ActiveWorkoutScreen extends ConsumerWidget {
     final workout = ref.watch(activeWorkoutProvider);
 
     if (workout == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+      });
       return const Scaffold(body: Center(child: Text('No active workout')));
     }
 
@@ -37,30 +44,14 @@ class ActiveWorkoutScreen extends ConsumerWidget {
     final progress = totalSets == 0 ? 0.0 : completedSets / totalSets;
 
     return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) async {
-        if (!didPop) {
-          final shouldDiscard = await _showDiscardDialog(context);
-          if (shouldDiscard == true && context.mounted) {
-            ref.read(restTimerProvider.notifier).stop();
-            ref.read(activeWorkoutProvider.notifier).discardWorkout();
-            Navigator.of(context).pop();
-          }
-        }
-      },
+      canPop: true,
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(Icons.close_rounded),
-            onPressed: () async {
-              final shouldDiscard = await _showDiscardDialog(context);
-              if (shouldDiscard == true && context.mounted) {
-                ref.read(restTimerProvider.notifier).stop();
-                ref.read(activeWorkoutProvider.notifier).discardWorkout();
-                Navigator.of(context).pop();
-              }
-            },
+            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 32),
+            tooltip: 'Minimize workout',
+            onPressed: () => Navigator.of(context).pop(),
           ),
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,9 +86,35 @@ class ActiveWorkoutScreen extends ConsumerWidget {
               tooltip: 'Edit duration',
               onPressed: () => _showDurationEditor(context, ref, workout),
             ),
-            IconButton(
+            PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert_rounded),
-              onPressed: () {},
+              color: AppColors.surfaceElevated,
+              onSelected: (value) async {
+                if (value != 'discard') return;
+                final shouldDiscard = await _showDiscardDialog(context);
+                if (shouldDiscard == true && context.mounted) {
+                  ref.read(restTimerProvider.notifier).stop();
+                  await ref
+                      .read(activeWorkoutProvider.notifier)
+                      .discardWorkout();
+                  if (context.mounted) Navigator.of(context).pop();
+                }
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(
+                  value: 'discard',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.delete_outline_rounded,
+                        color: AppColors.error,
+                      ),
+                      SizedBox(width: 8),
+                      Text('Discard workout'),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -692,26 +709,43 @@ class _ExerciseCard extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
                 child: Row(
                   children: [
-                    if (exercise.gifUrl != null) ...[
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: Image.asset(
-                          'assets/gifs/${exercise.gifUrl}',
-                          width: 36,
-                          height: 36,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                    ],
                     Expanded(
-                      child: Text(
-                        exercise.exerciseName,
-                        style: TextStyle(
-                          color: AppColors.primaryVariant,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
+                      child: InkWell(
+                        onTap: () => _openExerciseDetail(context, ref),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Row(
+                          children: [
+                            if (exercise.gifUrl != null) ...[
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(6),
+                                child: Image.asset(
+                                  'assets/gifs/${exercise.gifUrl}',
+                                  width: 36,
+                                  height: 36,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, _, _) =>
+                                      const SizedBox.shrink(),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                            ],
+                            Expanded(
+                              child: Text(
+                                exercise.exerciseName,
+                                style: TextStyle(
+                                  color: AppColors.primaryVariant,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.info_outline_rounded,
+                              color: AppColors.textTertiary,
+                              size: 16,
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -907,6 +941,18 @@ class _ExerciseCard extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Future<void> _openExerciseDetail(BuildContext context, WidgetRef ref) async {
+    final selectedExercise = await ref
+        .read(exerciseDaoProvider)
+        .getById(exercise.exerciseId);
+    if (!context.mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ExerciseDetailScreen(exercise: selectedExercise),
+      ),
     );
   }
 }

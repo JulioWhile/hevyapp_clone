@@ -293,11 +293,16 @@ class WorkoutDao extends DatabaseAccessor<AppDatabase> with _$WorkoutDaoMixin {
       FROM workouts w
       JOIN workout_exercises we ON w.id = we.workout_id
       JOIN workout_sets ws ON we.id = ws.workout_exercise_id
-      WHERE we.exercise_id = ? AND w.finished_at IS NOT NULL AND ws.is_completed = 1
-      GROUP BY w.id
+      JOIN exercises e ON e.id = we.exercise_id
+      WHERE (we.exercise_id = ? OR lower(trim(e.name)) = (
+        SELECT lower(trim(name)) FROM exercises WHERE id = ?
+      ))
+        AND w.finished_at IS NOT NULL
+        AND ws.is_completed = 1
+      GROUP BY w.id, w.started_at
       ORDER BY w.started_at ASC
       ''',
-      variables: [Variable.withInt(exerciseId)],
+      variables: [Variable.withInt(exerciseId), Variable.withInt(exerciseId)],
     );
 
     final rows = await query.get();
@@ -305,7 +310,7 @@ class WorkoutDao extends DatabaseAccessor<AppDatabase> with _$WorkoutDaoMixin {
         .map(
           (r) => ChartDataPoint(
             date: DateTime.parse(r.read<String>('date')),
-            value: r.read<double>('value'),
+            value: _readDouble(r.data['value']),
           ),
         )
         .toList();
@@ -319,11 +324,16 @@ class WorkoutDao extends DatabaseAccessor<AppDatabase> with _$WorkoutDaoMixin {
       FROM workouts w
       JOIN workout_exercises we ON w.id = we.workout_id
       JOIN workout_sets ws ON we.id = ws.workout_exercise_id
-      WHERE we.exercise_id = ? AND w.finished_at IS NOT NULL AND ws.is_completed = 1
-      GROUP BY w.id
+      JOIN exercises e ON e.id = we.exercise_id
+      WHERE (we.exercise_id = ? OR lower(trim(e.name)) = (
+        SELECT lower(trim(name)) FROM exercises WHERE id = ?
+      ))
+        AND w.finished_at IS NOT NULL
+        AND ws.is_completed = 1
+      GROUP BY w.id, w.started_at
       ORDER BY w.started_at ASC
       ''',
-      variables: [Variable.withInt(exerciseId)],
+      variables: [Variable.withInt(exerciseId), Variable.withInt(exerciseId)],
     );
 
     final rows = await query.get();
@@ -331,7 +341,7 @@ class WorkoutDao extends DatabaseAccessor<AppDatabase> with _$WorkoutDaoMixin {
         .map(
           (r) => ChartDataPoint(
             date: DateTime.parse(r.read<String>('date')),
-            value: r.read<double>('value'),
+            value: _readDouble(r.data['value']),
           ),
         )
         .toList();
@@ -374,6 +384,11 @@ class WorkoutDao extends DatabaseAccessor<AppDatabase> with _$WorkoutDaoMixin {
       'exercises': exData,
     };
   }
+}
+
+double _readDouble(Object? value) {
+  if (value is num) return value.toDouble();
+  return double.tryParse(value?.toString() ?? '') ?? 0;
 }
 
 class ChartDataPoint {

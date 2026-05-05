@@ -12,6 +12,7 @@ import 'package:hevy_app/app/theme/colors.dart';
 import 'package:hevy_app/core/database/app_database.dart';
 import 'package:hevy_app/core/database/daos/workout_dao.dart';
 import 'package:hevy_app/core/providers/unit_providers.dart';
+import 'package:hevy_app/features/exercises/presentation/screens/exercise_detail_screen.dart';
 import 'package:hevy_app/features/history/presentation/widgets/muscle_split_card.dart';
 import 'package:hevy_app/features/workout/presentation/providers/workout_providers.dart';
 import 'package:hevy_app/features/workout/presentation/widgets/exercise_picker_sheet.dart';
@@ -224,6 +225,65 @@ class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (_isEditing ||
+                          (w.notes?.trim().isNotEmpty ?? false)) ...[
+                        TextFormField(
+                          controller: _notesController,
+                          readOnly: !_isEditing,
+                          minLines: _isEditing ? 2 : null,
+                          maxLines: null,
+                          decoration: InputDecoration(
+                            hintText: 'Description',
+                            hintStyle: const TextStyle(
+                              color: AppColors.textTertiary,
+                              fontSize: 14,
+                            ),
+                            border: _isEditing
+                                ? OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  )
+                                : InputBorder.none,
+                            enabledBorder: _isEditing
+                                ? OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(
+                                      color: AppColors.border.withValues(
+                                        alpha: 0.65,
+                                      ),
+                                    ),
+                                  )
+                                : InputBorder.none,
+                            focusedBorder: _isEditing
+                                ? const OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(8),
+                                    ),
+                                    borderSide: BorderSide(
+                                      color: AppColors.primary,
+                                    ),
+                                  )
+                                : InputBorder.none,
+                            filled: _isEditing,
+                            fillColor: AppColors.surfaceElevated,
+                            contentPadding: _isEditing
+                                ? const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 12,
+                                  )
+                                : EdgeInsets.zero,
+                            isDense: true,
+                          ),
+                          style: const TextStyle(
+                            fontSize: 15,
+                            height: 1.35,
+                            color: AppColors.textSecondary,
+                          ),
+                          onFieldSubmitted: _isEditing
+                              ? (_) => _saveWorkoutDetails(w.id)
+                              : null,
+                        ),
+                        const SizedBox(height: 20),
+                      ],
                       Row(
                         children: [
                           Expanded(
@@ -278,39 +338,6 @@ class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
                         },
                       ),
 
-                      // Notes — editable in both modes
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _notesController,
-                        readOnly: !_isEditing,
-                        decoration: InputDecoration(
-                          hintText: 'Workout notes...',
-                          hintStyle: const TextStyle(
-                            color: AppColors.textTertiary,
-                            fontSize: 14,
-                          ),
-                          border: _isEditing
-                              ? const OutlineInputBorder()
-                              : InputBorder.none,
-                          enabledBorder: _isEditing ? null : InputBorder.none,
-                          focusedBorder: _isEditing ? null : InputBorder.none,
-                          filled: _isEditing,
-                          fillColor: AppColors.surfaceElevated,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 12,
-                          ),
-                          isDense: true,
-                        ),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                        ),
-                        onFieldSubmitted: _isEditing
-                            ? (_) => _saveWorkoutDetails(w.id)
-                            : null,
-                      ),
-
                       const SizedBox(height: 28),
                       const Text('EXERCISES', style: _headerStyle),
                       const SizedBox(height: 12),
@@ -343,7 +370,9 @@ class _WorkoutDetailScreenState extends ConsumerState<WorkoutDetailScreen> {
                           ),
                         ),
 
-                      const SizedBox(height: 32),
+                      SizedBox(
+                        height: MediaQuery.paddingOf(context).bottom + 132,
+                      ),
                     ],
                   ),
                 ),
@@ -444,25 +473,48 @@ class _EditableExerciseCard extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 14, 8, 8),
             child: Row(
               children: [
-                if (exercise.exercise.gifUrl != null)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: Image.asset(
-                      'assets/gifs/${exercise.exercise.gifUrl}',
-                      width: 36,
-                      height: 36,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                    ),
-                  ),
-                const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    exercise.exercise.name,
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
+                  child: InkWell(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            ExerciseDetailScreen(exercise: exercise.exercise),
+                      ),
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Row(
+                      children: [
+                        if (exercise.exercise.gifUrl != null) ...[
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: Image.asset(
+                              'assets/gifs/${exercise.exercise.gifUrl}',
+                              width: 36,
+                              height: 36,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) =>
+                                  const SizedBox.shrink(),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                        ],
+                        Expanded(
+                          child: Text(
+                            exercise.exercise.name,
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.info_outline_rounded,
+                          color: AppColors.textTertiary,
+                          size: 16,
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -867,6 +919,8 @@ const _headerStyle = TextStyle(
   letterSpacing: 0.5,
 );
 
+const double _metricTileHeight = 116;
+
 class _MetricTile extends StatelessWidget {
   const _MetricTile({
     required this.icon,
@@ -879,39 +933,45 @@ class _MetricTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.surfaceElevated, AppColors.surface],
+    return SizedBox(
+      height: _metricTileHeight,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.surfaceElevated, AppColors.surface],
+          ),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.58)),
         ),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.58)),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: AppColors.primary, size: 22),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 16,
-              color: AppColors.textPrimary,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: AppColors.primary, size: 22),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: AppColors.textPrimary,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11,
-              color: AppColors.textTertiary,
-              fontWeight: FontWeight.w500,
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textTertiary,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -928,49 +988,57 @@ class _EditableDurationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.surfaceElevated, AppColors.surface],
+    return SizedBox(
+      height: _metricTileHeight,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.surfaceElevated, AppColors.surface],
+          ),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.58)),
         ),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.58)),
-      ),
-      child: Column(
-        children: [
-          const Icon(Icons.timer_outlined, color: AppColors.primary, size: 22),
-          const SizedBox(height: 8),
-          TextFormField(
-            controller: controller,
-            textAlign: TextAlign.center,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 16,
-              color: AppColors.textPrimary,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.timer_outlined,
+              color: AppColors.primary,
+              size: 22,
             ),
-            decoration: const InputDecoration(
-              suffixText: 'm',
-              isDense: true,
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.zero,
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: controller,
+              textAlign: TextAlign.center,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: AppColors.textPrimary,
+              ),
+              decoration: const InputDecoration(
+                suffixText: 'm',
+                isDense: true,
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+              ),
+              onFieldSubmitted: onSubmitted,
             ),
-            onFieldSubmitted: onSubmitted,
-          ),
-          const SizedBox(height: 2),
-          const Text(
-            'Duration',
-            style: TextStyle(
-              fontSize: 11,
-              color: AppColors.textTertiary,
-              fontWeight: FontWeight.w500,
+            const SizedBox(height: 2),
+            const Text(
+              'Duration',
+              style: TextStyle(
+                fontSize: 11,
+                color: AppColors.textTertiary,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

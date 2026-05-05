@@ -11,19 +11,20 @@ import 'package:hevy_app/core/database/daos/workout_dao.dart';
 import 'package:hevy_app/core/providers/unit_providers.dart';
 import 'package:hevy_app/features/workout/presentation/providers/workout_providers.dart';
 
-final maxWeightHistoryProvider = FutureProvider.family<List<ChartDataPoint>, int>((ref, exerciseId) {
-  return ref.watch(workoutDaoProvider).getMaxWeightHistory(exerciseId);
-});
+final maxWeightHistoryProvider =
+    FutureProvider.family<List<ChartDataPoint>, int>((ref, exerciseId) {
+      return ref.watch(workoutDaoProvider).getMaxWeightHistory(exerciseId);
+    });
 
-final volumeHistoryProvider = FutureProvider.family<List<ChartDataPoint>, int>((ref, exerciseId) {
+final volumeHistoryProvider = FutureProvider.family<List<ChartDataPoint>, int>((
+  ref,
+  exerciseId,
+) {
   return ref.watch(workoutDaoProvider).getVolumeHistory(exerciseId);
 });
 
 class ExerciseDetailScreen extends ConsumerWidget {
-  const ExerciseDetailScreen({
-    super.key,
-    required this.exercise,
-  });
+  const ExerciseDetailScreen({super.key, required this.exercise});
 
   final Exercise exercise;
 
@@ -31,9 +32,7 @@ class ExerciseDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(exercise.name),
-      ),
+      appBar: AppBar(title: Text(exercise.name)),
       body: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -48,125 +47,140 @@ class ExerciseDetailScreen extends ConsumerWidget {
           ),
         ),
         child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-          // ─── Header Info ──────────────────────────
-          Row(
-            children: [
-              _buildInfoChip(Icons.fitness_center_rounded, _capitalize(exercise.primaryMuscleGroup)),
-              const SizedBox(width: 8),
-              _buildInfoChip(Icons.build_circle_outlined, _capitalize(exercise.equipment)),
-            ],
+          padding: EdgeInsets.fromLTRB(
+            20,
+            20,
+            20,
+            MediaQuery.paddingOf(context).bottom + 140,
           ),
-          if (exercise.secondaryMuscleGroups != null) ...[
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: (() {
-                try {
-                  final list = json.decode(exercise.secondaryMuscleGroups!) as List<dynamic>;
-                  return list.map((g) => _buildInfoChip(
-                    Icons.fitness_center_outlined,
-                    _capitalize(g.toString()),
-                  )).toList();
-                } catch (_) {
-                  return <Widget>[];
-                }
-              })(),
+          children: [
+            // ─── Header Info ──────────────────────────
+            Row(
+              children: [
+                _buildInfoChip(
+                  Icons.fitness_center_rounded,
+                  _capitalize(exercise.primaryMuscleGroup),
+                ),
+                const SizedBox(width: 8),
+                _buildInfoChip(
+                  Icons.build_circle_outlined,
+                  _capitalize(exercise.equipment),
+                ),
+              ],
             ),
-          ],
-          const SizedBox(height: 24),
-
-          // ─── Exercise GIF ─────────────────────────
-          if (exercise.gifUrl != null) ...[
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                'assets/gifs/${exercise.gifUrl}',
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            if (exercise.secondaryMuscleGroups != null) ...[
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: (() {
+                  try {
+                    final list =
+                        json.decode(exercise.secondaryMuscleGroups!)
+                            as List<dynamic>;
+                    return list
+                        .map(
+                          (g) => _buildInfoChip(
+                            Icons.fitness_center_outlined,
+                            _capitalize(g.toString()),
+                          ),
+                        )
+                        .toList();
+                  } catch (_) {
+                    return <Widget>[];
+                  }
+                })(),
               ),
-            ),
-            const SizedBox(height: 32),
-          ],
+            ],
+            const SizedBox(height: 24),
 
-          // ─── Instructions ─────────────────────────
-          if (exercise.instructions != null) ...[
+            // ─── Exercise GIF ─────────────────────────
+            if (exercise.gifUrl != null) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  'assets/gifs/${exercise.gifUrl}',
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
+
+            // ─── Instructions ─────────────────────────
+            if (exercise.instructions != null) ...[
+              Text(
+                'Instructions',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 12),
+              ...(() sync* {
+                try {
+                  final steps =
+                      json.decode(exercise.instructions!) as List<dynamic>;
+                  for (int i = 0; i < steps.length; i++) {
+                    yield Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 24,
+                            height: 24,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '${i + 1}',
+                              style: const TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              (steps[i] as String).replaceFirst(
+                                RegExp(r'^Step:\d+\s*'),
+                                '',
+                              ),
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 14,
+                                height: 1.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                } catch (_) {}
+              })(),
+              const SizedBox(height: 32),
+            ],
+
+            // ─── Max Weight Chart ─────────────────────
             Text(
-              'Instructions',
+              'Max Weight History',
               style: Theme.of(context).textTheme.titleLarge,
             ),
-            const SizedBox(height: 12),
-            ...(() sync* {
-              try {
-                final steps = json.decode(exercise.instructions!) as List<dynamic>;
-                for (int i = 0; i < steps.length; i++) {
-                  yield Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 24,
-                          height: 24,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            '${i + 1}',
-                            style: const TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            (steps[i] as String).replaceFirst(RegExp(r'^Step:\d+\s*'), ''),
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 14,
-                              height: 1.5,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              } catch (_) {}
-            })(),
-            const SizedBox(height: 32),
-          ],
+            const SizedBox(height: 16),
+            SizedBox(height: 250, child: _buildChart(ref, exercise.id, true)),
+            const SizedBox(height: 40),
 
-          // ─── Max Weight Chart ─────────────────────
-          Text(
-            'Max Weight History',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 250,
-            child: _buildChart(ref, exercise.id, true),
-          ),
-          const SizedBox(height: 40),
-
-          // ─── Volume Chart ─────────────────────────
-          Text(
-            'Total Volume History',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 250,
-            child: _buildChart(ref, exercise.id, false),
-          ),
+            // ─── Volume Chart ─────────────────────────
+            Text(
+              'Total Volume History',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 16),
+            SizedBox(height: 250, child: _buildChart(ref, exercise.id, false)),
           ],
         ),
       ),
@@ -196,7 +210,7 @@ class ExerciseDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildChart(WidgetRef ref, int exerciseId, bool isMaxWeight) {
-    final asyncData = isMaxWeight 
+    final asyncData = isMaxWeight
         ? ref.watch(maxWeightHistoryProvider(exerciseId))
         : ref.watch(volumeHistoryProvider(exerciseId));
     final unitLabel = ref.watch(unitLabelProvider);
@@ -208,7 +222,9 @@ class ExerciseDetailScreen extends ConsumerWidget {
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.border.withValues(alpha: 0.58)),
+              border: Border.all(
+                color: AppColors.border.withValues(alpha: 0.58),
+              ),
             ),
             alignment: Alignment.center,
             child: const Text(
@@ -218,27 +234,31 @@ class ExerciseDetailScreen extends ConsumerWidget {
           );
         }
 
-        // If only 1 point, duplicate it slightly so it draws a line
-        if (data.length == 1) {
-          data = [
-            ChartDataPoint(date: data[0].date.subtract(const Duration(days: 1)), value: data[0].value),
-            data[0],
-          ];
-        }
-
         final spots = data.asMap().entries.map((e) {
           return FlSpot(e.key.toDouble(), e.value.value);
         }).toList();
 
         final minY = data.map((e) => e.value).reduce((a, b) => a < b ? a : b);
         final maxY = data.map((e) => e.value).reduce((a, b) => a > b ? a : b);
-        
-        final padding = (maxY - minY) * 0.2;
+
+        final range = maxY - minY;
+        final padding = range == 0
+            ? (maxY.abs() * 0.2).clamp(1.0, double.infinity)
+            : range * 0.2;
         final actualMinY = minY - padding < 0 ? 0.0 : minY - padding;
         final actualMaxY = maxY + padding;
+        final verticalInterval = (actualMaxY - actualMinY) > 0
+            ? (actualMaxY - actualMinY) / 4
+            : 1.0;
+        final hasSinglePoint = data.length == 1;
 
         return Container(
-          padding: const EdgeInsets.only(right: 20, top: 20, bottom: 10, left: 0),
+          padding: const EdgeInsets.only(
+            right: 20,
+            top: 20,
+            bottom: 10,
+            left: 0,
+          ),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(8),
@@ -249,15 +269,19 @@ class ExerciseDetailScreen extends ConsumerWidget {
               gridData: FlGridData(
                 show: true,
                 drawVerticalLine: false,
-                horizontalInterval: maxY > 0 ? maxY / 4 : 1,
+                horizontalInterval: verticalInterval,
                 getDrawingHorizontalLine: (value) {
                   return FlLine(color: AppColors.border, strokeWidth: 1);
                 },
               ),
               titlesData: FlTitlesData(
                 show: true,
-                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                topTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
@@ -265,9 +289,13 @@ class ExerciseDetailScreen extends ConsumerWidget {
                     interval: 1,
                     getTitlesWidget: (value, meta) {
                       final index = value.toInt();
-                      if (index < 0 || index >= data.length) return const SizedBox();
+                      if (index < 0 || index >= data.length) {
+                        return const SizedBox();
+                      }
                       // Only show a few labels on bottom to avoid crowding
-                      if (data.length > 5 && index % (data.length ~/ 4) != 0 && index != data.length - 1) {
+                      if (data.length > 5 &&
+                          index % (data.length ~/ 4) != 0 &&
+                          index != data.length - 1) {
                         return const SizedBox();
                       }
                       final date = data[index].date;
@@ -275,7 +303,10 @@ class ExerciseDetailScreen extends ConsumerWidget {
                         padding: const EdgeInsets.only(top: 10),
                         child: Text(
                           DateFormat('MMM d').format(date),
-                          style: const TextStyle(color: AppColors.textTertiary, fontSize: 10),
+                          style: const TextStyle(
+                            color: AppColors.textTertiary,
+                            fontSize: 10,
+                          ),
                         ),
                       );
                     },
@@ -284,13 +315,19 @@ class ExerciseDetailScreen extends ConsumerWidget {
                 leftTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
-                    interval: maxY > 0 ? (maxY / 4) : 1,
+                    interval: verticalInterval,
                     reservedSize: 42,
                     getTitlesWidget: (value, meta) {
-                      if (value == actualMinY || value == actualMaxY) return const SizedBox();
+                      if ((value - actualMinY).abs() < 0.001 ||
+                          (value - actualMaxY).abs() < 0.001) {
+                        return const SizedBox();
+                      }
                       return Text(
                         value.toInt().toString(),
-                        style: const TextStyle(color: AppColors.textTertiary, fontSize: 10),
+                        style: const TextStyle(
+                          color: AppColors.textTertiary,
+                          fontSize: 10,
+                        ),
                         textAlign: TextAlign.right,
                       );
                     },
@@ -298,8 +335,8 @@ class ExerciseDetailScreen extends ConsumerWidget {
                 ),
               ),
               borderData: FlBorderData(show: false),
-              minX: 0,
-              maxX: (data.length - 1).toDouble(),
+              minX: hasSinglePoint ? -1 : 0,
+              maxX: hasSinglePoint ? 1 : (data.length - 1).toDouble(),
               minY: actualMinY,
               maxY: actualMaxY,
               lineBarsData: [
@@ -340,11 +377,18 @@ class ExerciseDetailScreen extends ConsumerWidget {
                       final date = data[touchedSpot.x.toInt()].date;
                       return LineTooltipItem(
                         '${touchedSpot.y.toStringAsFixed(1)} $unitLabel\n',
-                        const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                         children: [
                           TextSpan(
                             text: DateFormat('MMM d, yyyy').format(date),
-                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.normal),
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.normal,
+                            ),
                           ),
                         ],
                       );
@@ -357,7 +401,12 @@ class ExerciseDetailScreen extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) => Center(child: Text('Error: $e', style: const TextStyle(color: AppColors.error))),
+      error: (e, st) => Center(
+        child: Text(
+          'Error: $e',
+          style: const TextStyle(color: AppColors.error),
+        ),
+      ),
     );
   }
 
